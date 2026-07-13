@@ -1,0 +1,12 @@
+# Crontab pi-tracker — à adapter puis installer avec : crontab -e
+# Hypothèse : projet cloné dans /home/pi/pi-tracker
+
+# Sync GitHub quotidien des données (23h15, heure locale du Pi)
+15 23 * * * /home/pi/pi-tracker/sync.sh >> /home/pi/pi-tracker/logs/sync.log 2>&1
+
+# Exemple de collecte périodique (à activer quand un script de collecte
+# automatique existera, ex. crypto toutes les heures) :
+# 0 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/crypto.py >> logs/collect.log 2>&1
+
+# Purge des logs au 1er du mois (garde les 500 dernières lignes)
+0 0 1 * * cd /home/pi/pi-tracker/logs && for f in *.log; do tail -n 500 "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done

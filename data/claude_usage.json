@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "category": "claude_usage",
+  "updated_at": "2026-07-13T15:14:52+00:00",
+  "entries": [
+    {
+      "timestamp": "2026-07-13T15:14:52+00:00",
+      "calls": 24,
+      "note": "Session initiale — construction du dashboard pi-tracker"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Secrets — ne JAMAIS commiter
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs locaux
+logs/
+
+# OS
+.DS_Store

@@ -1,0 +1,19 @@
+# Unit systemd : démarre le serveur Flask au boot du Pi.
+# Installation :
+#   sudo cp deploy/tracker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now tracker.service
+[Unit]
+Description=pi-tracker dashboard server
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/pi-tracker
+ExecStart=/usr/bin/python3 /home/pi/pi-tracker/server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
