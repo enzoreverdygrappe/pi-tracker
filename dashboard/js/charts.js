@@ -290,5 +290,65 @@ const Charts = (() => {
     finalize(container, svg);
   }
 
-  return { line, bars, heatmap };
+  /* ------------------------------------------------------------------ ring */
+
+  /**
+   * Anneau de progression façon WHOOP.
+   * @param {HTMLElement} container
+   * @param {{value: number|null, maxValue?: number, display?: string,
+   *          unit?: string, label: string, color?: string}} options
+   */
+  function ring(container, options = {}) {
+    const {
+      value = null, maxValue = 100, display = "—", unit = "",
+      label = "", color = "var(--data-accent)",
+    } = options;
+    const SIZE = 150;
+    const CENTER = SIZE / 2;
+    const RADIUS = 62;
+    const STROKE = 9;
+
+    const svg = el("svg", {
+      viewBox: `0 0 ${SIZE} ${SIZE}`,
+      role: "img",
+      "aria-label": `${label} : ${display}${unit}`,
+    });
+    svg.appendChild(el("circle", {
+      class: "ring-track", cx: CENTER, cy: CENTER, r: RADIUS,
+      "stroke-width": STROKE,
+    }));
+
+    if (typeof value === "number" && !Number.isNaN(value)) {
+      const fraction = Math.max(0, Math.min(1, value / maxValue));
+      const circumference = 2 * Math.PI * RADIUS;
+      const arc = el("circle", {
+        class: "ring-arc", cx: CENTER, cy: CENTER, r: RADIUS,
+        "stroke-width": STROKE,
+        "stroke-dasharray": `${circumference * fraction} ${circumference}`,
+        transform: `rotate(-90 ${CENTER} ${CENTER})`,
+      });
+      arc.style.stroke = color;
+      svg.appendChild(arc);
+    }
+
+    svg.appendChild(el("text", {
+      class: "ring-value", x: CENTER, y: CENTER + 6, "text-anchor": "middle",
+    }, display));
+    if (unit) {
+      svg.appendChild(el("text", {
+        class: "ring-unit", x: CENTER, y: CENTER + 24, "text-anchor": "middle",
+      }, unit));
+    }
+
+    const box = document.createElement("div");
+    box.className = "ring-box";
+    box.appendChild(svg);
+    const labelNode = document.createElement("span");
+    labelNode.className = "ring-label";
+    labelNode.textContent = label;
+    box.appendChild(labelNode);
+    container.appendChild(box);
+  }
+
+  return { line, bars, heatmap, ring };
 })();

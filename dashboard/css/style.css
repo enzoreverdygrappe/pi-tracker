@@ -56,7 +56,96 @@
   --glow-1: rgba(139, 92, 255, 0.07);
   --glow-2: rgba(212, 175, 55, 0.04);
 
+  /* Couleurs de statut (récupération) et métriques spécifiques */
+  --status-good: #2ea043;
+  --status-warn: #d4a72c;
+  --status-bad: #e5484d;
+  --metric-sleep: var(--data-accent);
+  --metric-strain: var(--data-accent);
+
+  /* Police d'affichage des titres (serif dans le thème claude) */
+  --font-display: inherit;
+
   font-size: 16px;
+}
+
+/* ------ Marque · WHOOP — noir profond, anneaux vert/bleu ------ */
+:root[data-theme="whoop"] {
+  --bg: #0f1216;
+  --surface: #171b21;
+  --surface-raised: #1f242c;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --hairline: rgba(255, 255, 255, 0.06);
+  --leader: rgba(154, 165, 177, 0.28);
+  --grid-line: rgba(255, 255, 255, 0.06);
+  --track: rgba(255, 255, 255, 0.09);
+  --bar-zero: rgba(255, 255, 255, 0.07);
+  --tab-bg: rgba(15, 18, 22, 0.92);
+  --accent: #4aa8e8;
+  --accent-soft: rgba(74, 168, 232, 0.12);
+  --accent-2: #1ea844;
+  --accent-2-soft: rgba(30, 168, 68, 0.12);
+  --data-accent: #2f8fd0;
+  --data-active: #1ea844;
+  --heat-empty: rgba(255, 255, 255, 0.05);
+  --heat-1: #10263a;
+  --heat-2: #153853;
+  --heat-3: #1b4d71;
+  --heat-4: #246d9c;
+  --heat-5: #2f8fd0;
+  --ink: #eef1f4;
+  --ink-secondary: #9aa5b1;
+  --ink-muted: #566270;
+  --status-good: #1ea844;
+  --metric-sleep: #4585b8;
+  --metric-strain: #3b93d4;
+  --radius: 16px;
+  --glow-1: rgba(47, 143, 208, 0.05);
+  --glow-2: transparent;
+}
+
+/* ------ Marque · Claude — crème chaud, terracotta, titres serif ------ */
+:root[data-theme="claude"] {
+  --bg: #faf9f5;
+  --surface: #ffffff;
+  --surface-raised: #f4f2ec;
+  --border: rgba(61, 61, 58, 0.12);
+  --border-strong: rgba(193, 95, 60, 0.5);
+  --hairline: rgba(61, 61, 58, 0.1);
+  --leader: rgba(61, 61, 58, 0.25);
+  --grid-line: rgba(61, 61, 58, 0.09);
+  --track: rgba(61, 61, 58, 0.1);
+  --bar-zero: rgba(61, 61, 58, 0.08);
+  --tab-bg: rgba(250, 249, 245, 0.95);
+  --accent: #c15f3c;
+  --accent-soft: rgba(217, 119, 87, 0.12);
+  --accent-2: #3d3d3a;
+  --accent-2-soft: rgba(61, 61, 58, 0.08);
+  --data-accent: #c15f3c;
+  --data-active: #3d3d3a;
+  --heat-empty: rgba(61, 61, 58, 0.07);
+  --heat-1: #f1ddd3;
+  --heat-2: #e5b39d;
+  --heat-3: #d98a68;
+  --heat-4: #cb6f45;
+  --heat-5: #b3552f;
+  --ink: #3d3d3a;
+  --ink-secondary: #6e6b64;
+  --ink-muted: #a3a094;
+  --font-display: "Tiempos Text", Georgia, "Times New Roman", serif;
+  --radius: 14px;
+  --glow-1: transparent;
+  --glow-2: transparent;
+}
+
+/* Titre de vue en serif bas-de-casse dans le thème claude (façon claude.ai) */
+:root[data-theme="claude"] .view-title {
+  font-family: var(--font-display);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 1.15rem;
+  font-weight: 500;
 }
 
 /* ------ 01 · Terminal Classic — mono, vert unique sur noir ------ */
@@ -528,6 +617,61 @@ html, body {
 
 .stat-tile.accent .stat-value { color: var(--accent); }
 .stat-tile.accent { border-color: var(--border-strong); }
+
+.stat-row.quad { grid-template-columns: repeat(4, 1fr); }
+.stat-row.quad .stat-value { font-size: 1.35rem; }
+
+/* Anneaux façon WHOOP (Sleep / Recovery / Strain) */
+
+.ring-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.ring-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 10px 12px;
+}
+
+.ring-box svg { width: 118px; height: 118px; }
+
+.ring-track { fill: none; stroke: var(--track); }
+
+.ring-arc {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dasharray 400ms ease;
+}
+
+.ring-value {
+  fill: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.ring-unit {
+  fill: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.ring-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
 
 /* Liste type "ledger" : 01  date  note ······ valeur */
 

@@ -245,5 +245,5 @@
     );
   }
 
-  Views.register({ id: "claude", label: "Claude", icon: "◆", render });
+  Views.register({ id: "claude", label: "Claude", icon: "◆", brandTheme: "claude", render });
 })();

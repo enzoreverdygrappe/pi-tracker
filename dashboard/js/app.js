@@ -14,6 +14,7 @@
   function activateView(view, { force = false } = {}) {
     if (activeView && view.id === activeView.id && !force) return;
     activeView = view;
+    Theme.applyFor(view);
 
     tabBar.querySelectorAll(".tab-button").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.viewId === view.id);
@@ -50,6 +51,7 @@
     label.textContent = Theme.current().label;
     button.addEventListener("pointerdown", () => {
       label.textContent = Theme.cycle().label;
+      Theme.applyFor(activeView);
       /* Re-rendu : les couleurs inline (heatmap) suivent le nouveau thème. */
       if (activeView) activateView(activeView, { force: true });
     });

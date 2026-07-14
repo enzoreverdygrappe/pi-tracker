@@ -289,6 +289,8 @@ def build_daily_records(
             "sleep_performance_pct": score.get("sleep_performance_percentage"),
             "sleep_efficiency_pct": _round1(score.get("sleep_efficiency_percentage")),
             "respiratory_rate": _round1(score.get("respiratory_rate")),
+            "sleep_start": str(sleep.get("start") or ""),
+            "sleep_end": str(sleep.get("end") or ""),
         })
 
     for recovery in recovery_records:

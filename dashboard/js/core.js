@@ -9,7 +9,10 @@
  * Un thème = un bloc de variables CSS sur :root[data-theme="..."].
  */
 const Theme = (() => {
+  /* "brand" = chaque vue dans l'identité de sa marque (Claude -> claude.ai,
+     Whoop -> app WHOOP…) ; les autres modes forcent un thème global. */
   const THEMES = [
+    { id: "brand", label: "Brand" },
     { id: "esnia", label: "Esnia" },
     { id: "data", label: "Data" },
     { id: "terminal", label: "Terminal" },
@@ -17,16 +20,19 @@ const Theme = (() => {
     { id: "receipt", label: "Receipt" },
     { id: "brutalist", label: "Brutal" },
   ];
-  const STORAGE_KEY = "tracker-theme";
+  const STORAGE_KEY = "tracker-theme-v2";
+  const DEFAULT_BRAND_THEME = "esnia";
 
-  function current() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return THEMES.find((theme) => theme.id === saved) || THEMES[0];
+  function find(themeId) {
+    return THEMES.find((theme) => theme.id === themeId);
   }
 
-  function apply(themeId) {
-    const theme = THEMES.find((entry) => entry.id === themeId) || THEMES[0];
-    document.documentElement.dataset.theme = theme.id;
+  function current() {
+    return find(localStorage.getItem(STORAGE_KEY)) || THEMES[0];
+  }
+
+  function setMode(themeId) {
+    const theme = find(themeId) || THEMES[0];
     try {
       localStorage.setItem(STORAGE_KEY, theme.id);
     } catch (error) {
@@ -37,15 +43,27 @@ const Theme = (() => {
 
   function cycle() {
     const index = THEMES.findIndex((theme) => theme.id === current().id);
-    return apply(THEMES[(index + 1) % THEMES.length].id);
+    return setMode(THEMES[(index + 1) % THEMES.length].id);
   }
 
-  return { current, apply, cycle };
+  /** Applique le thème effectif pour une vue (résout le mode "brand"). */
+  function applyFor(view) {
+    const mode = current();
+    document.documentElement.dataset.theme = mode.id === "brand"
+      ? (view && view.brandTheme) || DEFAULT_BRAND_THEME
+      : mode.id;
+  }
+
+  return { current, setMode, cycle, applyFor };
 })();
 
 /* Applique le thème avant le premier rendu (évite le flash).
-   ?theme=<id> dans l'URL force un thème (test/preview). */
-Theme.apply(new URLSearchParams(location.search).get("theme") || Theme.current().id);
+   ?theme=<id> dans l'URL force un mode (test/preview). */
+(() => {
+  const requested = new URLSearchParams(location.search).get("theme");
+  if (requested) Theme.setMode(requested);
+  Theme.applyFor(null);
+})();
 
 const Views = (() => {
   const registered = [];

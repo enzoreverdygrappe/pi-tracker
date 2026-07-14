@@ -21,6 +21,7 @@ def make_recovery(date, score=66, hrv=52.31, rhr=48):
 
 def make_sleep(date, in_bed_h=8.0, awake_h=0.5, nap=False):
     return {
+        "start": f"{date}T22:52:00.000Z",
         "end": f"{date}T06:58:00.000Z",
         "nap": nap,
         "score": {
@@ -65,6 +66,7 @@ class TestBuildDailyRecords:
         assert entry["rhr_bpm"] == 48
         assert entry["sleep_hours"] == 7.5
         assert entry["sleep_performance_pct"] == 87
+        assert entry["sleep_end"] == "2026-07-14T06:58:00.000Z"
         assert entry["strain"] == 12.4
         assert entry["calories_kcal"] == 2000  # 8368 kJ ~ 2000 kcal
 
