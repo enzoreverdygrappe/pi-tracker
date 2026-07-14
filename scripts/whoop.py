@@ -43,6 +43,8 @@ SCOPES = "offline read:recovery read:sleep read:cycles read:profile"
 DEFAULT_REDIRECT_URI = "http://localhost:8399/callback"
 
 REQUEST_TIMEOUT_SECONDS = 15
+# Cloudflare (erreur 1010) rejette le User-Agent Python par défaut.
+USER_AGENT = "pi-tracker/1.0 (personal dashboard)"
 AUTH_FLOW_TIMEOUT_SECONDS = 300
 TOKEN_EXPIRY_MARGIN_SECONDS = 60
 PAGE_LIMIT = 25
@@ -76,7 +78,10 @@ def _post_token_request(payload: dict[str, str]) -> dict[str, Any]:
     request = Request(
         TOKEN_URL,
         data=urlencode(payload).encode(),
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": USER_AGENT,
+        },
     )
     try:
         with urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
@@ -201,6 +206,7 @@ def _fetch_collection(path: str, token: str, start_iso: str) -> list[dict[str, A
             params["nextToken"] = next_token
         request = Request(f"{API_BASE}{path}?{urlencode(params)}", headers={
             "Authorization": f"Bearer {token}",
+            "User-Agent": USER_AGENT,
         })
         try:
             with urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
