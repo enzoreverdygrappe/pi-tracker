@@ -170,7 +170,7 @@
 
     container.innerHTML = `
       <div class="view-header">
-        <div class="view-title"><em>Whoop</em><span class="sep">/</span>Journal</div>
+        <div class="view-title"><span class="brand-logo logo-whoop"></span><em>Whoop</em><span class="sep">/</span>Journal</div>
         <div class="live-pill">
           <span class="live-dot"></span>
           <span>maj ${formatUpdateTime(state.updatedAt)}</span>
@@ -238,5 +238,9 @@
     renderMain(container);
   }
 
-  Views.register({ id: "whoop", label: "Whoop", icon: "◉", brandTheme: "whoop", render });
+  Views.register({
+    id: "whoop", label: "Whoop",
+    icon: '<span class="brand-logo logo-whoop"></span>',
+    brandTheme: "whoop", render,
+  });
 })();

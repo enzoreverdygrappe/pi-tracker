@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="logosandtypes_com" data-name="logosandtypes com" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M0,0H150V150H0V0Z"/>
+  <path class="cls-2" d="M75,8.11C37.81,8.11,7.66,38.25,7.66,75.44s30.15,67.34,67.34,67.34,67.34-30.15,67.34-67.34S112.19,8.11,75,8.11ZM33.65,47.43h7.35l11.75,38.64h-7.35l-11.75-38.64Zm26.26,62.09h-7.39l18.9-62.09h7.35l-18.87,62.09Zm37.77,0h-7.35l-11.75-38.64h7.35l8.07,26.56,15.19-50.01h7.39l-18.91,62.09Z"/>
+</svg>

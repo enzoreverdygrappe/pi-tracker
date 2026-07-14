@@ -211,7 +211,7 @@
 
     container.innerHTML = `
       <div class="view-header">
-        <div class="view-title"><em>Claude</em><span class="sep">/</span>Usage API</div>
+        <div class="view-title"><span class="brand-logo logo-claude"></span><em>Claude</em><span class="sep">/</span>Usage API</div>
         <div class="live-pill">
           <span class="live-dot"></span>
           <span>maj ${formatUpdateTime(result.data.updated_at)}</span>
@@ -245,5 +245,9 @@
     );
   }
 
-  Views.register({ id: "claude", label: "Claude", icon: "◆", brandTheme: "claude", render });
+  Views.register({
+    id: "claude", label: "Claude",
+    icon: '<span class="brand-logo logo-claude"></span>',
+    brandTheme: "claude", render,
+  });
 })();

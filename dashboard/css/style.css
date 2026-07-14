@@ -444,6 +444,25 @@ html, body {
 .view-title em { color: var(--accent); font-style: normal; }
 .view-title .sep { color: var(--ink-muted); margin: 0 6px; }
 
+/* Logos de marque : masque alpha recoloré par currentColor,
+   suit donc automatiquement la couleur du texte et le thème. */
+
+.brand-logo {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.28em;
+  background-color: currentColor;
+  -webkit-mask: var(--logo-src) center / contain no-repeat;
+  mask: var(--logo-src) center / contain no-repeat;
+}
+
+.logo-claude { --logo-src: url("../assets/claude.png"); }
+.logo-whoop { --logo-src: url("../assets/whoop.svg"); }
+
+.view-title .brand-logo { margin-right: 8px; color: var(--accent); }
+.tab-button .brand-logo { width: 1.55em; height: 1.55em; vertical-align: middle; }
+
 .live-pill {
   display: flex;
   align-items: center;
