@@ -620,6 +620,45 @@ html, body {
 
 .stat-row.quad { grid-template-columns: repeat(4, 1fr); }
 .stat-row.quad .stat-value { font-size: 1.35rem; }
+.stat-row.duo { grid-template-columns: repeat(2, 1fr); }
+.stat-row.duo .stat-value { font-size: 1.5rem; }
+
+/* Navigation par jour : ‹ Aujourd'hui › */
+
+.day-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.nav-arrow {
+  min-width: 64px;
+  min-height: 46px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink-secondary);
+  font-family: var(--font-ui);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nav-arrow:active { background: var(--accent-2-soft); }
+.nav-arrow:disabled { opacity: 0.3; }
+
+.day-label {
+  min-width: 260px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
 
 /* Anneaux façon WHOOP (Sleep / Recovery / Strain) */
 

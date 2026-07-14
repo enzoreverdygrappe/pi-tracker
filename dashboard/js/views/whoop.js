@@ -1,6 +1,8 @@
 /**
- * Vue "Whoop" : reprend les codes de l'app WHOOP — anneaux Sommeil /
- * Récupération / Effort, tuiles métriques, historique en barres.
+ * Vue "Whoop" : reprend les codes de l'app WHOOP — navigation par jour,
+ * anneaux Sommeil / Récupération / Effort, tuiles métriques, historique.
+ * Chaque jour affiche SES données (pas de mélange entre jours) ; le cycle
+ * du jour en cours est signalé tant que WHOOP ne l'a pas clôturé.
  * Données : data/whoop.json (scripts/whoop.py collect) via /api/data/whoop.
  */
 "use strict";
@@ -12,6 +14,13 @@
   const STRAIN_SCALE_MAX = 21;
   const RECOVERY_GREEN_MIN = 67;
   const RECOVERY_YELLOW_MIN = 34;
+
+  /* État de navigation : jeu de données + index du jour sélectionné. */
+  const state = { entries: [], updatedAt: "", index: -1 };
+
+  function todayKey() {
+    return new Date().toISOString().slice(0, 10);
+  }
 
   /** Série des N derniers jours pour un champ (jours absents = 0). */
   function dailySeries(entries, field, days) {
@@ -32,26 +41,6 @@
     return (value === null || value === undefined) ? "—" : `${value}${suffix}`;
   }
 
-  /** Dernière valeur connue d'un champ (le cycle du jour peut être en attente). */
-  function latestValue(entries, field) {
-    for (let i = entries.length - 1; i >= 0; i -= 1) {
-      const value = entries[i][field];
-      if (value !== null && value !== undefined) return value;
-    }
-    return null;
-  }
-
-  /** Un "jour courant" composite : pour chaque métrique, la dernière valeur connue. */
-  function latestKnown(entries) {
-    const FIELDS = [
-      "recovery_pct", "hrv_ms", "rhr_bpm", "spo2_pct",
-      "sleep_hours", "sleep_performance_pct", "sleep_start", "sleep_end",
-      "strain", "calories_kcal",
-    ];
-    return FIELDS.reduce(
-      (acc, field) => ({ ...acc, [field]: latestValue(entries, field) }), {});
-  }
-
   /** Couleur de l'anneau récupération par zone, comme dans l'app WHOOP. */
   function recoveryColor(pct) {
     if (typeof pct !== "number") return "var(--track)";
@@ -66,34 +55,52 @@
     return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   }
 
-  /** "22:52 → 08:58 · 9,8 h" pour la dernière nuit connue. */
-  function lastNightMeta(last) {
-    const start = hourOf(last.sleep_start);
-    const end = hourOf(last.sleep_end);
-    const hours = typeof last.sleep_hours === "number"
-      ? `${last.sleep_hours.toLocaleString("fr-FR")} h` : "";
+  /** "22:52 → 08:58 · 9,8 h" pour la nuit du jour sélectionné. */
+  function nightMeta(entry) {
+    const start = hourOf(entry.sleep_start);
+    const end = hourOf(entry.sleep_end);
+    const hours = typeof entry.sleep_hours === "number"
+      ? `${entry.sleep_hours.toLocaleString("fr-FR")} h` : "";
     if (!start || !end) return hours;
     return `${start} → ${end}${hours ? " · " + hours : ""}`;
   }
 
-  function renderMetricTiles(last) {
+  function dayLabel(dateKey) {
+    if (dateKey === todayKey()) return "Aujourd'hui";
+    return new Date(`${dateKey}T12:00:00`).toLocaleDateString("fr-FR",
+      { weekday: "short", day: "numeric", month: "short" });
+  }
+
+  /** Le cycle WHOOP du jour courant n'est clos qu'en fin de journée. */
+  function isPendingCycle(entry) {
+    return entry.date === todayKey()
+      && (entry.strain === null || entry.strain === undefined);
+  }
+
+  function renderDayNav(entry) {
+    const pending = isPendingCycle(entry) ? " · cycle en cours" : "";
+    const atStart = state.index <= 0;
+    const atEnd = state.index >= state.entries.length - 1;
     return `
-      <div class="stat-row quad">
+      <div class="day-nav">
+        <button type="button" class="nav-arrow" data-nav="-1"
+          ${atStart ? "disabled" : ""} aria-label="Jour précédent">‹</button>
+        <span class="day-label">${dayLabel(entry.date)}${pending}</span>
+        <button type="button" class="nav-arrow" data-nav="1"
+          ${atEnd ? "disabled" : ""} aria-label="Jour suivant">›</button>
+      </div>`;
+  }
+
+  function renderMetricTiles(entry) {
+    return `
+      <div class="stat-row duo">
         <div class="stat-tile">
           <div class="stat-label">Calories</div>
-          <div class="stat-value">${fmt(last.calories_kcal)}<small>kcal</small></div>
+          <div class="stat-value">${fmt(entry.calories_kcal)}<small>kcal</small></div>
         </div>
         <div class="stat-tile">
           <div class="stat-label">FC repos</div>
-          <div class="stat-value">${fmt(last.rhr_bpm)}<small>bpm</small></div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Variabilité</div>
-          <div class="stat-value">${fmt(last.hrv_ms)}<small>ms</small></div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Oxygène</div>
-          <div class="stat-value">${fmt(last.spo2_pct)}<small>%</small></div>
+          <div class="stat-value">${fmt(entry.rhr_bpm)}<small>bpm</small></div>
         </div>
       </div>`;
   }
@@ -135,6 +142,82 @@
       { hour: "2-digit", minute: "2-digit" });
   }
 
+  function drawRings(entry) {
+    const rings = document.getElementById("whoop-rings");
+    Charts.ring(rings, {
+      value: entry.sleep_performance_pct, maxValue: 100,
+      display: fmt(entry.sleep_performance_pct, "%"),
+      label: "Sommeil", color: "var(--metric-sleep)",
+    });
+    Charts.ring(rings, {
+      value: entry.recovery_pct, maxValue: 100,
+      display: fmt(entry.recovery_pct, "%"),
+      label: "Récupération", color: recoveryColor(entry.recovery_pct),
+    });
+    Charts.ring(rings, {
+      value: entry.strain, maxValue: STRAIN_SCALE_MAX,
+      display: typeof entry.strain === "number"
+        ? entry.strain.toLocaleString("fr-FR",
+            { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        : "—",
+      label: "Effort", color: "var(--metric-strain)",
+    });
+  }
+
+  function renderMain(container) {
+    const entries = state.entries;
+    const entry = entries[state.index];
+
+    container.innerHTML = `
+      <div class="view-header">
+        <div class="view-title"><em>Whoop</em><span class="sep">/</span>Journal</div>
+        <div class="live-pill">
+          <span class="live-dot"></span>
+          <span>maj ${formatUpdateTime(state.updatedAt)}</span>
+        </div>
+      </div>
+      ${renderDayNav(entry)}
+      <div class="ring-row" id="whoop-rings"></div>
+      ${renderMetricTiles(entry)}
+      <div class="section">
+        ${sectionHeader("01", "Sommeil de la nuit", nightMeta(entry) || "pas de nuit enregistrée")}
+        <div id="whoop-sleep-chart"></div>
+      </div>
+      <div class="section">
+        ${sectionHeader("02", "Récupération", `${CHART_DAYS} derniers jours · %`)}
+        <div id="whoop-recovery-chart"></div>
+      </div>
+      <div class="section">
+        ${sectionHeader("03", "Effort", `${CHART_DAYS} derniers jours · échelle 0-21`)}
+        <div id="whoop-strain-chart"></div>
+      </div>
+      <div class="section">
+        ${sectionHeader("04", "Derniers jours", `${Math.min(entries.length, RECENT_DAYS)} / ${entries.length}`)}
+        ${renderDayLedger(entries)}
+      </div>`;
+
+    container.querySelectorAll(".nav-arrow").forEach((button) => {
+      button.addEventListener("pointerdown", () => {
+        const nextIndex = state.index + Number(button.dataset.nav);
+        if (nextIndex < 0 || nextIndex >= entries.length) return;
+        state.index = nextIndex;
+        renderMain(container);
+        container.scrollTop = 0;
+      });
+    });
+
+    drawRings(entry);
+    Charts.bars(document.getElementById("whoop-sleep-chart"),
+      dailySeries(entries, "sleep_hours", CHART_DAYS),
+      { unit: "h", ariaLabel: "Heures de sommeil par jour" });
+    Charts.bars(document.getElementById("whoop-recovery-chart"),
+      dailySeries(entries, "recovery_pct", CHART_DAYS),
+      { unit: "%", ariaLabel: "Récupération WHOOP par jour" });
+    Charts.bars(document.getElementById("whoop-strain-chart"),
+      dailySeries(entries, "strain", CHART_DAYS),
+      { unit: "", ariaLabel: "Effort par jour" });
+  }
+
   async function render(container) {
     const result = await fetchCategory("whoop");
 
@@ -149,66 +232,10 @@
       return;
     }
 
-    const entries = result.data.entries;
-    /* Dernières valeurs connues : l'effort/calories du jour arrivent en fin
-       de cycle, on montre celles de la veille plutôt que des tirets. */
-    const last = latestKnown(entries);
-
-    container.innerHTML = `
-      <div class="view-header">
-        <div class="view-title"><em>Whoop</em><span class="sep">/</span>Aujourd'hui</div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(result.data.updated_at)}</span>
-        </div>
-      </div>
-      <div class="ring-row" id="whoop-rings"></div>
-      ${renderMetricTiles(last)}
-      <div class="section">
-        ${sectionHeader("01", "Récupération", `${CHART_DAYS} derniers jours · %`)}
-        <div id="whoop-recovery-chart"></div>
-      </div>
-      <div class="section">
-        ${sectionHeader("02", "Sommeil", lastNightMeta(last) || `${CHART_DAYS} derniers jours`)}
-        <div id="whoop-sleep-chart"></div>
-      </div>
-      <div class="section">
-        ${sectionHeader("03", "Effort", `${CHART_DAYS} derniers jours · échelle 0-21`)}
-        <div id="whoop-strain-chart"></div>
-      </div>
-      <div class="section">
-        ${sectionHeader("04", "Derniers jours", `${Math.min(entries.length, RECENT_DAYS)} / ${entries.length}`)}
-        ${renderDayLedger(entries)}
-      </div>`;
-
-    const rings = document.getElementById("whoop-rings");
-    Charts.ring(rings, {
-      value: last.sleep_performance_pct, maxValue: 100,
-      display: fmt(last.sleep_performance_pct, "%"),
-      label: "Sommeil", color: "var(--metric-sleep)",
-    });
-    Charts.ring(rings, {
-      value: last.recovery_pct, maxValue: 100,
-      display: fmt(last.recovery_pct, "%"),
-      label: "Récupération", color: recoveryColor(last.recovery_pct),
-    });
-    Charts.ring(rings, {
-      value: last.strain, maxValue: STRAIN_SCALE_MAX,
-      display: typeof last.strain === "number"
-        ? last.strain.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-        : "—",
-      label: "Effort", color: "var(--metric-strain)",
-    });
-
-    Charts.bars(document.getElementById("whoop-recovery-chart"),
-      dailySeries(entries, "recovery_pct", CHART_DAYS),
-      { unit: "%", ariaLabel: "Récupération WHOOP par jour" });
-    Charts.bars(document.getElementById("whoop-sleep-chart"),
-      dailySeries(entries, "sleep_hours", CHART_DAYS),
-      { unit: "h", ariaLabel: "Heures de sommeil par jour" });
-    Charts.bars(document.getElementById("whoop-strain-chart"),
-      dailySeries(entries, "strain", CHART_DAYS),
-      { unit: "", ariaLabel: "Effort par jour" });
+    state.entries = result.data.entries;
+    state.updatedAt = result.data.updated_at;
+    state.index = state.entries.length - 1;
+    renderMain(container);
   }
 
   Views.register({ id: "whoop", label: "Whoop", icon: "◉", brandTheme: "whoop", render });
