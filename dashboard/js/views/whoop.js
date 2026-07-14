@@ -32,6 +32,26 @@
     return (value === null || value === undefined) ? "—" : `${value}${suffix}`;
   }
 
+  /** Dernière valeur connue d'un champ (le cycle du jour peut être en attente). */
+  function latestValue(entries, field) {
+    for (let i = entries.length - 1; i >= 0; i -= 1) {
+      const value = entries[i][field];
+      if (value !== null && value !== undefined) return value;
+    }
+    return null;
+  }
+
+  /** Un "jour courant" composite : pour chaque métrique, la dernière valeur connue. */
+  function latestKnown(entries) {
+    const FIELDS = [
+      "recovery_pct", "hrv_ms", "rhr_bpm", "spo2_pct",
+      "sleep_hours", "sleep_performance_pct", "sleep_start", "sleep_end",
+      "strain", "calories_kcal",
+    ];
+    return FIELDS.reduce(
+      (acc, field) => ({ ...acc, [field]: latestValue(entries, field) }), {});
+  }
+
   /** Couleur de l'anneau récupération par zone, comme dans l'app WHOOP. */
   function recoveryColor(pct) {
     if (typeof pct !== "number") return "var(--track)";
@@ -64,15 +84,15 @@
           <div class="stat-value">${fmt(last.calories_kcal)}<small>kcal</small></div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">RHR</div>
+          <div class="stat-label">FC repos</div>
           <div class="stat-value">${fmt(last.rhr_bpm)}<small>bpm</small></div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">HRV</div>
+          <div class="stat-label">Variabilité</div>
           <div class="stat-value">${fmt(last.hrv_ms)}<small>ms</small></div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">SpO2</div>
+          <div class="stat-label">Oxygène</div>
           <div class="stat-value">${fmt(last.spo2_pct)}<small>%</small></div>
         </div>
       </div>`;
@@ -130,7 +150,9 @@
     }
 
     const entries = result.data.entries;
-    const last = entries[entries.length - 1];
+    /* Dernières valeurs connues : l'effort/calories du jour arrivent en fin
+       de cycle, on montre celles de la veille plutôt que des tirets. */
+    const last = latestKnown(entries);
 
     container.innerHTML = `
       <div class="view-header">

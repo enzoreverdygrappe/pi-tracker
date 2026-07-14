@@ -173,7 +173,7 @@
       body = [
         limitBar("Session", formatRemaining(snapshot.session.resets_at),
           snapshot.session.pct),
-        limitBar("Weekly", formatResetDay(snapshot.weekly.resets_at),
+        limitBar("Hebdo", formatResetDay(snapshot.weekly.resets_at),
           snapshot.weekly.pct),
         scoped ? limitBar(escapeHtml(scoped.label),
           formatResetDay(scoped.resets_at), scoped.pct) : "",
