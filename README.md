@@ -17,7 +17,7 @@ deploy/              Kiosque Chromium, crontab, unit systemd
 tests/               Tests pytest
 ```
 
-**Ajouter une nouvelle métrique** (crypto, fitness…) :
+**Ajouter une nouvelle métrique** :
 1. `scripts/<nom>.py` qui écrit `data/<nom>.json` (réutiliser `scripts/common.py`)
 2. `dashboard/js/views/<nom>.js` qui appelle `Views.register({...})`
 3. Référencer le script dans `index.html` avant `app.js`
@@ -146,7 +146,7 @@ crontab -e
 
 - **23h15 tous les jours** : `sync.sh` pousse les données vers GitHub
   (log dans `logs/sync.log`).
-- Les futures collectes automatiques (crypto, etc.) s'ajoutent sur le même
+- Les futures collectes automatiques s'ajoutent sur le même
   modèle : une ligne cron → un script de `scripts/` → un JSON de `data/`.
 
 ## Sécurité

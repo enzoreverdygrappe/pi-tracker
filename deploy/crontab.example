@@ -9,9 +9,8 @@
 # les données arrivent sur le Pi via le sync GitHub.
 */30 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/claude_limits.py collect >> logs/collect.log 2>&1
 
-# Exemple de collecte périodique (à activer quand un script de collecte
-# automatique existera, ex. crypto toutes les heures) :
-# 0 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/crypto.py >> logs/collect.log 2>&1
+# Exemple de collecte périodique pour une future source de données :
+# 0 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/<source>.py >> logs/collect.log 2>&1
 
 # Données WHOOP toutes les 2 h (récupération/sommeil/strain des 7 derniers jours)
 # Nécessite l'auth faite une fois (scripts/whoop.py auth) sur cette machine.
