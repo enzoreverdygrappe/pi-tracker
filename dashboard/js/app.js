@@ -9,11 +9,11 @@
 (() => {
   const container = document.getElementById("view-container");
   const tabBar = document.getElementById("tab-bar");
-  let activeViewId = null;
+  let activeView = null;
 
-  function activateView(view) {
-    if (view.id === activeViewId) return;
-    activeViewId = view.id;
+  function activateView(view, { force = false } = {}) {
+    if (activeView && view.id === activeView.id && !force) return;
+    activeView = view;
 
     tabBar.querySelectorAll(".tab-button").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.viewId === view.id);
@@ -44,6 +44,17 @@
     });
   }
 
+  function setupThemeButton() {
+    const button = document.getElementById("theme-button");
+    const label = document.getElementById("theme-label");
+    label.textContent = Theme.current().label;
+    button.addEventListener("pointerdown", () => {
+      label.textContent = Theme.cycle().label;
+      /* Re-rendu : les couleurs inline (heatmap) suivent le nouveau thème. */
+      if (activeView) activateView(activeView, { force: true });
+    });
+  }
+
   function startClock() {
     const timeNode = document.getElementById("clock-time");
     const dateNode = document.getElementById("clock-date");
@@ -65,6 +76,7 @@
       return;
     }
     buildTabBar(views);
+    setupThemeButton();
     startClock();
     activateView(views[0]);
   });

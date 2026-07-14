@@ -1,39 +1,236 @@
 /* ==========================================================================
-   ESNIA Tracker — thème dark luxury, langage visuel "data dashboard"
-   (sections numérotées, micro-labels espacés, chiffres en mono, heatmap).
+   ESNIA Tracker — thèmes commutables inspirés des explorations
+   claude-usage-widget (Terminal Classic, Data Dashboard, HUD Gauge,
+   Print Receipt, Brutalist Mono) + thème maison "Esnia" dark luxury.
+   Tout le rendu passe par les variables ci-dessous ; un thème = un bloc
+   d'overrides sur :root[data-theme="..."].
    Cible : écran tactile 1024x600, kiosque Chromium, pas de survol souris.
    ========================================================================== */
 
 :root {
+  /* ------ Thème par défaut : ESNIA (dark luxury or/violet) ------ */
+
   /* Surfaces */
   --bg: #06080f;
   --surface: #0b101c;
   --surface-raised: #101728;
   --border: rgba(148, 130, 70, 0.14);
   --border-strong: rgba(212, 175, 55, 0.38);
+  --hairline: rgba(255, 255, 255, 0.05);
+  --leader: rgba(154, 160, 180, 0.25);
+  --grid-line: rgba(255, 255, 255, 0.055);
+  --track: rgba(255, 255, 255, 0.07);
+  --bar-zero: rgba(255, 255, 255, 0.07);
+  --tab-bg: rgba(6, 8, 15, 0.9);
 
-  /* Accents de marque (chrome UI uniquement) */
-  --gold: #d4af37;
-  --gold-soft: rgba(212, 175, 55, 0.1);
-  --violet: #8b5cff;
-  --violet-soft: rgba(139, 92, 255, 0.14);
+  /* Accents (chrome UI) */
+  --accent: #d4af37;
+  --accent-soft: rgba(212, 175, 55, 0.1);
+  --accent-2: #8b5cff;
+  --accent-2-soft: rgba(139, 92, 255, 0.14);
 
-  /* Couleurs de données (validées contraste/CVD sur fond sombre) */
-  --data-gold: #b38c26;
-  --data-violet: #8b5cff;
+  /* Couleurs de données (validées contraste/CVD sur leur surface) */
+  --data-accent: #b38c26;
+  --data-active: #8b5cff;
+
+  /* Rampe séquentielle heatmap (faible -> fort, luminosité monotone) */
+  --heat-empty: rgba(255, 255, 255, 0.05);
+  --heat-1: #2b2310;
+  --heat-2: #4e3d13;
+  --heat-3: #755c1a;
+  --heat-4: #9c7a20;
+  --heat-5: #c9a227;
 
   /* Encres */
   --ink: #ece9df;
   --ink-secondary: #9aa0b4;
   --ink-muted: #565d72;
 
+  /* Typo + géométrie */
   --font-mono: "SF Mono", "JetBrains Mono", "Menlo", "DejaVu Sans Mono", monospace;
-
+  --font-ui: "Inter", "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
   --radius: 12px;
   --tab-height: 84px;
 
+  /* Halos de fond (transparents dans les thèmes qui n'en veulent pas) */
+  --glow-1: rgba(139, 92, 255, 0.07);
+  --glow-2: rgba(212, 175, 55, 0.04);
+
   font-size: 16px;
 }
+
+/* ------ 01 · Terminal Classic — mono, vert unique sur noir ------ */
+:root[data-theme="terminal"] {
+  --bg: #050905;
+  --surface: #081108;
+  --surface-raised: #0c180c;
+  --border: rgba(46, 160, 67, 0.22);
+  --border-strong: rgba(63, 185, 80, 0.5);
+  --hairline: rgba(63, 185, 80, 0.12);
+  --leader: rgba(63, 185, 80, 0.3);
+  --grid-line: rgba(63, 185, 80, 0.1);
+  --track: rgba(63, 185, 80, 0.12);
+  --bar-zero: rgba(63, 185, 80, 0.12);
+  --tab-bg: rgba(5, 9, 5, 0.92);
+  --accent: #3fb950;
+  --accent-soft: rgba(63, 185, 80, 0.12);
+  --accent-2: #56d364;
+  --accent-2-soft: rgba(86, 211, 100, 0.15);
+  --data-accent: #2ea043;
+  --data-active: #56d364;
+  --heat-empty: rgba(63, 185, 80, 0.07);
+  --heat-1: #0e2a14;
+  --heat-2: #14431f;
+  --heat-3: #1a5c2b;
+  --heat-4: #227a37;
+  --heat-5: #2ea043;
+  --ink: #d5e8d5;
+  --ink-secondary: #85a985;
+  --ink-muted: #4a6b4a;
+  --font-ui: var(--font-mono);
+  --radius: 6px;
+  --glow-1: transparent;
+  --glow-2: transparent;
+}
+
+/* ------ 02 · Data Dashboard — bleu Bloomberg, Inter + mono ------ */
+:root[data-theme="data"] {
+  --bg: #0a0e16;
+  --surface: #0e131e;
+  --surface-raised: #131a2a;
+  --border: rgba(90, 162, 247, 0.14);
+  --border-strong: rgba(90, 162, 247, 0.45);
+  --hairline: rgba(255, 255, 255, 0.05);
+  --leader: rgba(150, 160, 181, 0.25);
+  --grid-line: rgba(255, 255, 255, 0.055);
+  --track: rgba(255, 255, 255, 0.08);
+  --bar-zero: rgba(255, 255, 255, 0.07);
+  --tab-bg: rgba(10, 14, 22, 0.9);
+  --accent: #5aa2f7;
+  --accent-soft: rgba(90, 162, 247, 0.12);
+  --accent-2: #8b5cff;
+  --accent-2-soft: rgba(139, 92, 255, 0.14);
+  --data-accent: #3d8fe0;
+  --data-active: #8b5cff;
+  --heat-empty: rgba(255, 255, 255, 0.05);
+  --heat-1: #0f2440;
+  --heat-2: #16375f;
+  --heat-3: #1e4b80;
+  --heat-4: #2a69ad;
+  --heat-5: #3d8fe0;
+  --ink: #e6e9f0;
+  --ink-secondary: #96a0b5;
+  --ink-muted: #556077;
+  --radius: 10px;
+  --glow-1: rgba(61, 143, 224, 0.06);
+  --glow-2: transparent;
+}
+
+/* ------ 03 · HUD Gauge — ambre cockpit sur noir chaud ------ */
+:root[data-theme="hud"] {
+  --bg: #0d0a05;
+  --surface: #14100a;
+  --surface-raised: #1b150d;
+  --border: rgba(245, 166, 35, 0.16);
+  --border-strong: rgba(245, 166, 35, 0.45);
+  --hairline: rgba(245, 166, 35, 0.1);
+  --leader: rgba(176, 164, 136, 0.3);
+  --grid-line: rgba(245, 166, 35, 0.09);
+  --track: rgba(245, 166, 35, 0.12);
+  --bar-zero: rgba(245, 166, 35, 0.1);
+  --tab-bg: rgba(13, 10, 5, 0.92);
+  --accent: #f5a623;
+  --accent-soft: rgba(245, 166, 35, 0.12);
+  --accent-2: #ffcc66;
+  --accent-2-soft: rgba(255, 204, 102, 0.14);
+  --data-accent: #bd8214;
+  --data-active: #ffcc66;
+  --heat-empty: rgba(245, 166, 35, 0.07);
+  --heat-1: #2c2008;
+  --heat-2: #4a350c;
+  --heat-3: #6b4d10;
+  --heat-4: #946a12;
+  --heat-5: #bd8214;
+  --ink: #f0e8d8;
+  --ink-secondary: #b0a488;
+  --ink-muted: #6a5f48;
+  --font-ui: var(--font-mono);
+  --radius: 10px;
+  --glow-1: rgba(245, 166, 35, 0.05);
+  --glow-2: transparent;
+}
+
+/* ------ 04 · Print Receipt — papier crème + encre (clair) ------ */
+:root[data-theme="receipt"] {
+  --bg: #ece7da;
+  --surface: #f3efe3;
+  --surface-raised: #faf7ee;
+  --border: rgba(38, 34, 27, 0.16);
+  --border-strong: rgba(38, 34, 27, 0.4);
+  --hairline: rgba(38, 34, 27, 0.12);
+  --leader: rgba(38, 34, 27, 0.3);
+  --grid-line: rgba(38, 34, 27, 0.1);
+  --track: rgba(38, 34, 27, 0.12);
+  --bar-zero: rgba(38, 34, 27, 0.1);
+  --tab-bg: rgba(236, 231, 218, 0.94);
+  --accent: #8a5c0d;
+  --accent-soft: rgba(168, 106, 16, 0.12);
+  --accent-2: #26221b;
+  --accent-2-soft: rgba(38, 34, 27, 0.1);
+  --data-accent: #a86a10;
+  --data-active: #26221b;
+  --heat-empty: rgba(38, 34, 27, 0.07);
+  --heat-1: #ddd3ba;
+  --heat-2: #cdba8e;
+  --heat-3: #c09a55;
+  --heat-4: #b3822d;
+  --heat-5: #a86a10;
+  --ink: #26221b;
+  --ink-secondary: #6b6455;
+  --ink-muted: #98907e;
+  --font-ui: var(--font-mono);
+  --radius: 8px;
+  --glow-1: transparent;
+  --glow-2: transparent;
+}
+
+/* ------ 06 · Brutalist Mono — journal suisse, cramoisi (clair) ------ */
+:root[data-theme="brutalist"] {
+  --bg: #e9e6df;
+  --surface: #efece5;
+  --surface-raised: #ffffff;
+  --border: rgba(17, 17, 17, 0.35);
+  --border-strong: #111111;
+  --hairline: rgba(17, 17, 17, 0.15);
+  --leader: rgba(17, 17, 17, 0.35);
+  --grid-line: rgba(17, 17, 17, 0.12);
+  --track: rgba(17, 17, 17, 0.14);
+  --bar-zero: rgba(17, 17, 17, 0.12);
+  --tab-bg: rgba(233, 230, 223, 0.95);
+  --accent: #c81e2e;
+  --accent-soft: rgba(200, 30, 46, 0.1);
+  --accent-2: #111111;
+  --accent-2-soft: rgba(17, 17, 17, 0.08);
+  --data-accent: #c81e2e;
+  --data-active: #111111;
+  --heat-empty: rgba(17, 17, 17, 0.07);
+  --heat-1: #d5d2c9;
+  --heat-2: #a8a49a;
+  --heat-3: #7a766c;
+  --heat-4: #45423b;
+  --heat-5: #111111;
+  --ink: #111111;
+  --ink-secondary: #444444;
+  --ink-muted: #8a877e;
+  --font-ui: var(--font-mono);
+  --radius: 0px;
+  --glow-1: transparent;
+  --glow-2: transparent;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -42,7 +239,7 @@ html, body {
   overflow: hidden;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Inter", "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   user-select: none;
   -webkit-user-select: none;
@@ -55,8 +252,8 @@ html, body {
   flex-direction: column;
   height: 100vh;
   background:
-    radial-gradient(1200px 500px at 85% -10%, rgba(139, 92, 255, 0.07), transparent 60%),
-    radial-gradient(900px 400px at -10% 110%, rgba(212, 175, 55, 0.04), transparent 55%),
+    radial-gradient(1200px 500px at 85% -10%, var(--glow-1), transparent 60%),
+    radial-gradient(900px 400px at -10% 110%, var(--glow-2), transparent 55%),
     var(--bg);
 }
 
@@ -68,13 +265,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 13px 24px 10px;
   border-bottom: 1px solid var(--border);
 }
 
 .brand { display: flex; align-items: baseline; gap: 10px; }
 
-.brand-mark { color: var(--gold); font-size: 0.8rem; transform: translateY(-1px); }
+.brand-mark { color: var(--accent); font-size: 0.8rem; transform: translateY(-1px); }
 
 .brand-name {
   font-size: 1.1rem;
@@ -90,12 +288,35 @@ html, body {
   color: var(--ink-muted);
 }
 
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+
+.theme-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.theme-button:active { background: var(--accent-2-soft); }
+.theme-button .theme-glyph { color: var(--accent); font-size: 0.8rem; }
+
 .clock { display: flex; align-items: baseline; gap: 12px; font-family: var(--font-mono); }
 
 #clock-time {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--accent);
 }
 
 #clock-date {
@@ -116,8 +337,6 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* En-tête de vue : titre à gauche, statut LIVE à droite */
-
 .view-header {
   display: flex;
   align-items: center;
@@ -133,7 +352,7 @@ html, body {
   color: var(--ink);
 }
 
-.view-title em { color: var(--gold); font-style: normal; }
+.view-title em { color: var(--accent); font-style: normal; }
 .view-title .sep { color: var(--ink-muted); margin: 0 6px; }
 
 .live-pill {
@@ -151,8 +370,8 @@ html, body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
   animation: live-pulse 2.4s ease-in-out infinite;
 }
 
@@ -181,7 +400,7 @@ html, body {
 .section-num {
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  color: var(--gold);
+  color: var(--accent);
 }
 
 .section-name {
@@ -195,7 +414,7 @@ html, body {
 
 .section-title .leader {
   flex: 1;
-  border-bottom: 1px dotted rgba(154, 160, 180, 0.25);
+  border-bottom: 1px dotted var(--leader);
   transform: translateY(-3px);
 }
 
@@ -207,6 +426,56 @@ html, body {
   color: var(--ink-muted);
   white-space: nowrap;
 }
+
+/* Barres de limites de plan (session / hebdo / modèle) */
+
+.limit-row { margin-bottom: 14px; }
+.limit-row:last-child { margin-bottom: 2px; }
+
+.limit-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.limit-name { font-size: 0.95rem; font-weight: 600; color: var(--ink); }
+
+.limit-meta {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--ink-secondary);
+}
+
+.limit-meta b {
+  font-size: 0.98rem;
+  color: var(--ink);
+  margin-left: 10px;
+}
+
+.limit-track {
+  height: 8px;
+  border-radius: calc(var(--radius) / 2);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.limit-fill {
+  height: 100%;
+  border-radius: calc(var(--radius) / 2);
+  background: var(--data-accent);
+  transition: width 300ms ease;
+}
+
+.limit-row.is-high .limit-fill { background: var(--accent); }
+
+.limit-hint {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.limit-hint code { color: var(--ink-secondary); }
 
 /* Tuiles KPI denses */
 
@@ -257,10 +526,10 @@ html, body {
   margin-top: 6px;
 }
 
-.stat-tile.accent .stat-value { color: var(--gold); }
+.stat-tile.accent .stat-value { color: var(--accent); }
 .stat-tile.accent { border-color: var(--border-strong); }
 
-/* Liste type "top projects" : 01  date  note ······ valeur */
+/* Liste type "ledger" : 01  date  note ······ valeur */
 
 .ledger { list-style: none; font-family: var(--font-mono); }
 
@@ -272,7 +541,7 @@ html, body {
   font-size: 0.78rem;
 }
 
-.ledger .row-num { color: var(--gold); font-size: 0.68rem; }
+.ledger .row-num { color: var(--accent); font-size: 0.68rem; }
 
 .ledger .row-date { color: var(--ink-secondary); white-space: nowrap; }
 
@@ -286,12 +555,12 @@ html, body {
 
 .ledger .leader {
   flex: 1;
-  border-bottom: 1px dotted rgba(154, 160, 180, 0.25);
+  border-bottom: 1px dotted var(--leader);
   transform: translateY(-3px);
   min-width: 24px;
 }
 
-.ledger .row-value { color: var(--gold); font-weight: 600; white-space: nowrap; }
+.ledger .row-value { color: var(--accent); font-weight: 600; white-space: nowrap; }
 
 /* États vide / erreur / placeholder */
 
@@ -307,7 +576,7 @@ html, body {
   font-size: 0.9rem;
 }
 
-.empty-state .glyph { font-size: 1.9rem; color: var(--violet); opacity: 0.65; }
+.empty-state .glyph { font-size: 1.9rem; color: var(--accent-2); opacity: 0.65; }
 
 .empty-state code {
   font-family: var(--font-mono);
@@ -326,7 +595,7 @@ html, body {
 .chart-wrap { width: 100%; }
 .chart-wrap svg { display: block; width: 100%; height: auto; }
 
-.chart-grid-line { stroke: rgba(255, 255, 255, 0.055); stroke-width: 1; }
+.chart-grid-line { stroke: var(--grid-line); stroke-width: 1; }
 
 .chart-axis-label {
   fill: var(--ink-muted);
@@ -336,18 +605,18 @@ html, body {
 
 .chart-line {
   fill: none;
-  stroke: var(--data-gold);
+  stroke: var(--data-accent);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.chart-dot { fill: var(--data-gold); stroke: var(--bg); stroke-width: 2; }
-.chart-dot.is-active { fill: var(--violet); }
+.chart-dot { fill: var(--data-accent); stroke: var(--bg); stroke-width: 2; }
+.chart-dot.is-active { fill: var(--data-active); }
 
-.chart-bar { fill: var(--data-gold); }
-.chart-bar.is-zero { fill: rgba(255, 255, 255, 0.07); }
-.chart-bar.is-active { fill: var(--violet); }
+.chart-bar { fill: var(--data-accent); }
+.chart-bar.is-zero { fill: var(--bar-zero); }
+.chart-bar.is-active { fill: var(--data-active); }
 
 .chart-hit { fill: transparent; }
 
@@ -358,8 +627,8 @@ html, body {
   font-family: var(--font-mono);
 }
 
-.heatmap-cell { fill: rgba(255, 255, 255, 0.05); }
-.heatmap-cell.is-active { stroke: var(--violet); stroke-width: 1.5; }
+.heatmap-cell { fill: var(--heat-empty); }
+.heatmap-cell.is-active { stroke: var(--data-active); stroke-width: 1.5; }
 
 .chart-tooltip {
   position: fixed;
@@ -373,12 +642,12 @@ html, body {
   color: var(--ink);
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 12px));
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   white-space: nowrap;
 }
 
 .chart-tooltip .tip-label { color: var(--ink-secondary); margin-right: 8px; }
-.chart-tooltip .tip-value { color: var(--gold); font-weight: 700; }
+.chart-tooltip .tip-value { color: var(--accent); font-weight: 700; }
 
 /* --------------------------------------------------------------------------
    Barre d'onglets tactile (bas d'écran)
@@ -389,7 +658,7 @@ html, body {
   gap: 10px;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--border);
-  background: rgba(6, 8, 15, 0.9);
+  background: var(--tab-bg);
 }
 
 .tab-button {
@@ -404,7 +673,7 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--ink-secondary);
-  font-family: inherit;
+  font-family: var(--font-ui);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -415,10 +684,10 @@ html, body {
 
 .tab-button .tab-icon { font-size: 1.2rem; line-height: 1; }
 
-.tab-button:active { background: var(--violet-soft); }
+.tab-button:active { background: var(--accent-2-soft); }
 
 .tab-button.is-active {
-  background: var(--gold-soft);
+  background: var(--accent-soft);
   border-color: var(--border-strong);
-  color: var(--gold);
+  color: var(--accent);
 }

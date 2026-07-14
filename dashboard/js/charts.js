@@ -19,9 +19,16 @@ const Charts = (() => {
   const BAR_GAP = 2;
   const TOOLTIP_HIDE_DELAY_MS = 2500;
 
-  /* Rampe séquentielle or (sombre -> clair), luminosité monotone. */
-  const HEAT_RAMP = ["#2b2310", "#4e3d13", "#755c1a", "#9c7a20", "#c9a227"];
-  const HEAT_EMPTY = "rgba(255, 255, 255, 0.05)";
+  /* Rampe séquentielle du thème courant (--heat-1..5), fallback or ESNIA. */
+  const HEAT_FALLBACK = ["#2b2310", "#4e3d13", "#755c1a", "#9c7a20", "#c9a227"];
+
+  function heatRamp() {
+    const styles = getComputedStyle(document.documentElement);
+    const ramp = [1, 2, 3, 4, 5]
+      .map((step) => styles.getPropertyValue(`--heat-${step}`).trim())
+      .filter(Boolean);
+    return ramp.length === HEAT_FALLBACK.length ? ramp : HEAT_FALLBACK;
+  }
 
   function el(name, attrs, textContent) {
     const node = document.createElementNS(SVG_NS, name);
@@ -203,12 +210,11 @@ const Charts = (() => {
 
   /* --------------------------------------------------------------- heatmap */
 
-  function heatColor(value, maxValue) {
-    if (value <= 0) return HEAT_EMPTY;
+  function heatColor(ramp, value, maxValue) {
     const step = Math.min(
-      HEAT_RAMP.length - 1,
-      Math.floor((value / maxValue) * HEAT_RAMP.length));
-    return HEAT_RAMP[step];
+      ramp.length - 1,
+      Math.floor((value / maxValue) * ramp.length));
+    return ramp[step];
   }
 
   /**
@@ -240,6 +246,7 @@ const Charts = (() => {
     /* Lundi de la semaine courante (getDay: 0 = dimanche). */
     const monday = new Date(today.getTime() - ((today.getDay() + 6) % 7) * DAY_MS);
     const maxValue = Math.max(1, ...valueByDay.values());
+    const ramp = heatRamp();
     let lastMonth = -1;
     let lastLabelWeek = -MIN_WEEKS_BETWEEN_LABELS;
 
@@ -269,7 +276,7 @@ const Charts = (() => {
           x, y: TOP + day * (CELL + GAP), width: CELL, height: CELL, rx: 3,
         });
         /* style inline : prioritaire sur la règle CSS .heatmap-cell */
-        if (value > 0) cell.style.fill = heatColor(value, maxValue);
+        if (value > 0) cell.style.fill = heatColor(ramp, value, maxValue);
         cell.addEventListener("pointerdown", () => {
           activateMark(svg, cell, "heatmap-cell");
           showTooltip(cell.getBoundingClientRect(),

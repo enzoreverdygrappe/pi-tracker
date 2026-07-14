@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "category": "claude_limits",
+  "updated_at": "2026-07-14T08:09:38+00:00",
+  "entries": [
+    {
+      "timestamp": "2026-07-14T08:09:38+00:00",
+      "session": {
+        "pct": 33.0,
+        "resets_at": "2026-07-14T12:40:00.110613+00:00"
+      },
+      "weekly": {
+        "pct": 11.0,
+        "resets_at": "2026-07-19T22:00:00.110645+00:00"
+      },
+      "scoped": {
+        "label": "Fable",
+        "pct": 20.0,
+        "resets_at": "2026-07-19T22:00:00.110948+00:00"
+      }
+    }
+  ]
+}

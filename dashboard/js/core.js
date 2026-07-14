@@ -1,8 +1,51 @@
 /**
  * Noyau partagé, chargé AVANT les vues et app.js :
- * registre des vues + accès API + états vides.
+ * registre des vues + thèmes + accès API + états vides.
  */
 "use strict";
+
+/**
+ * Thèmes d'affichage, inspirés des explorations claude-usage-widget.
+ * Un thème = un bloc de variables CSS sur :root[data-theme="..."].
+ */
+const Theme = (() => {
+  const THEMES = [
+    { id: "esnia", label: "Esnia" },
+    { id: "data", label: "Data" },
+    { id: "terminal", label: "Terminal" },
+    { id: "hud", label: "HUD" },
+    { id: "receipt", label: "Receipt" },
+    { id: "brutalist", label: "Brutal" },
+  ];
+  const STORAGE_KEY = "tracker-theme";
+
+  function current() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return THEMES.find((theme) => theme.id === saved) || THEMES[0];
+  }
+
+  function apply(themeId) {
+    const theme = THEMES.find((entry) => entry.id === themeId) || THEMES[0];
+    document.documentElement.dataset.theme = theme.id;
+    try {
+      localStorage.setItem(STORAGE_KEY, theme.id);
+    } catch (error) {
+      console.error("Persistance du thème impossible :", error);
+    }
+    return theme;
+  }
+
+  function cycle() {
+    const index = THEMES.findIndex((theme) => theme.id === current().id);
+    return apply(THEMES[(index + 1) % THEMES.length].id);
+  }
+
+  return { current, apply, cycle };
+})();
+
+/* Applique le thème avant le premier rendu (évite le flash).
+   ?theme=<id> dans l'URL force un thème (test/preview). */
+Theme.apply(new URLSearchParams(location.search).get("theme") || Theme.current().id);
 
 const Views = (() => {
   const registered = [];

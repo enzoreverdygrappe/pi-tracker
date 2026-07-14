@@ -24,6 +24,12 @@ tests/               Tests pytest
 
 Rien d'autre à toucher : l'API et la barre d'onglets s'adaptent automatiquement.
 
+**Thèmes** : 6 skins commutables au doigt via le bouton ◐ du header (Esnia,
+Data, Terminal, HUD, Receipt, Brutal — inspirés des explorations
+claude-usage-widget). Le choix persiste en localStorage ; `?theme=<id>` dans
+l'URL force un thème. Un thème = un bloc de variables CSS dans
+`dashboard/css/style.css`.
+
 ## Démarrage rapide (dev, Mac/Linux)
 
 ```bash
@@ -34,6 +40,10 @@ pip install -r requirements.txt
 # Logger une session Claude
 python3 scripts/claude_usage.py add --calls 12 --note "Session dev dashboard"
 python3 scripts/claude_usage.py list
+
+# Collecter les limites de plan Claude (session 5h / hebdo / Fable)
+# Nécessite Claude Code connecté sur la machine (token OAuth local).
+python3 scripts/claude_limits.py collect
 
 # Lancer le dashboard
 python3 server.py

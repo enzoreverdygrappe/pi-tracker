@@ -120,8 +120,77 @@
       { hour: "2-digit", minute: "2-digit" });
   }
 
+  /** Temps restant avant reset : "4h 36m" / "12m" ; vide si passé/invalide. */
+  function formatRemaining(resetsAt) {
+    const remaining = new Date(resetsAt).getTime() - Date.now();
+    if (!resetsAt || Number.isNaN(remaining) || remaining <= 0) return "";
+    const minutes = Math.round(remaining / 60000);
+    const hours = Math.floor(minutes / 60);
+    return hours > 0 ? `${hours}h ${String(minutes % 60).padStart(2, "0")}m`
+      : `${minutes}m`;
+  }
+
+  /** Échéance de reset hebdo : "lun. 12:00" ; vide si invalide. */
+  function formatResetDay(resetsAt) {
+    const date = new Date(resetsAt);
+    if (!resetsAt || Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString("fr-FR",
+      { weekday: "short", hour: "2-digit", minute: "2-digit" });
+  }
+
+  const HIGH_UTILIZATION_PCT = 80;
+
+  function limitBar(name, meta, pct) {
+    const rounded = Math.round(pct);
+    const highClass = rounded >= HIGH_UTILIZATION_PCT ? " is-high" : "";
+    return `
+      <div class="limit-row${highClass}">
+        <div class="limit-head">
+          <span class="limit-name">${name}</span>
+          <span class="limit-meta">${meta}<b>${rounded}%</b></span>
+        </div>
+        <div class="limit-track">
+          <div class="limit-fill" style="width:${Math.min(100, Math.max(0, pct))}%"></div>
+        </div>
+      </div>`;
+  }
+
+  /** Section barres de limites ; snapshot = dernière entrée de claude_limits. */
+  function renderLimits(limitsResult) {
+    const entries = limitsResult.success ? (limitsResult.data.entries || []) : [];
+    const snapshot = entries[entries.length - 1];
+    const meta = snapshot
+      ? `maj ${formatUpdateTime(snapshot.timestamp)}`
+      : "";
+
+    let body;
+    if (!snapshot) {
+      body = `<div class="limit-hint">Pas encore de données —
+        lancer <code>python3 scripts/claude_limits.py collect</code>
+        sur la machine connectée à Claude Code.</div>`;
+    } else {
+      const scoped = snapshot.scoped;
+      body = [
+        limitBar("Session", formatRemaining(snapshot.session.resets_at),
+          snapshot.session.pct),
+        limitBar("Weekly", formatResetDay(snapshot.weekly.resets_at),
+          snapshot.weekly.pct),
+        scoped ? limitBar(escapeHtml(scoped.label),
+          formatResetDay(scoped.resets_at), scoped.pct) : "",
+      ].join("");
+    }
+
+    return `<div class="section">
+      ${sectionHeader("01", "Limites du plan", meta)}
+      ${body}
+    </div>`;
+  }
+
   async function render(container) {
-    const result = await fetchCategory("claude_usage");
+    const [result, limitsResult] = await Promise.all([
+      fetchCategory("claude_usage"),
+      fetchCategory("claude_limits"),
+    ]);
 
     if (!result.success) {
       renderEmptyState(container, {
@@ -148,17 +217,18 @@
           <span>maj ${formatUpdateTime(result.data.updated_at)}</span>
         </div>
       </div>
+      ${renderLimits(limitsResult)}
       ${renderStats(computeStats(entries))}
       <div class="section">
-        ${sectionHeader("01", "Activité", `${CHART_DAYS} derniers jours · appels/jour`)}
+        ${sectionHeader("02", "Activité", `${CHART_DAYS} derniers jours · appels/jour`)}
         <div id="claude-chart"></div>
       </div>
       <div class="section">
-        ${sectionHeader("02", "Calendrier", `${HEATMAP_WEEKS} semaines`)}
+        ${sectionHeader("03", "Calendrier", `${HEATMAP_WEEKS} semaines`)}
         <div id="claude-heatmap"></div>
       </div>
       <div class="section">
-        ${sectionHeader("03", "Sessions récentes", `${Math.min(entries.length, RECENT_SESSIONS)} / ${entries.length}`)}
+        ${sectionHeader("04", "Sessions récentes", `${Math.min(entries.length, RECENT_SESSIONS)} / ${entries.length}`)}
         ${renderSessionLedger(entries)}
       </div>`;
 
