@@ -13,5 +13,9 @@
 # automatique existera, ex. crypto toutes les heures) :
 # 0 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/crypto.py >> logs/collect.log 2>&1
 
+# Données WHOOP toutes les 2 h (récupération/sommeil/strain des 7 derniers jours)
+# Nécessite l'auth faite une fois (scripts/whoop.py auth) sur cette machine.
+0 */2 * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/whoop.py collect >> logs/collect.log 2>&1
+
 # Purge des logs au 1er du mois (garde les 500 dernières lignes)
 0 0 1 * * cd /home/pi/pi-tracker/logs && for f in *.log; do tail -n 500 "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done

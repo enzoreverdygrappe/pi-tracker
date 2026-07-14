@@ -78,6 +78,8 @@
     buildTabBar(views);
     setupThemeButton();
     startClock();
-    activateView(views[0]);
+    /* ?view=<id> dans l'URL choisit la vue initiale (deep-link kiosque/test). */
+    const requested = new URLSearchParams(location.search).get("view");
+    activateView(views.find((view) => view.id === requested) || views[0]);
   });
 })();

@@ -1,5 +1,6 @@
 # Secrets — ne JAMAIS commiter
 .env
+.whoop_tokens.json
 
 # Python
 __pycache__/

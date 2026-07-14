@@ -52,6 +52,24 @@ python3 server.py
 
 Tests : `pytest tests/ -v`
 
+## WHOOP
+
+1. Créer une app sur https://developer-dashboard.whoop.com (compte WHOOP
+   normal) avec l'URI de redirection `http://localhost:8399/callback` et les
+   scopes recovery / sleep / cycles / profile.
+2. Copier le Client ID / Client Secret dans `.env`
+   (`WHOOP_CLIENT_ID`, `WHOOP_CLIENT_SECRET`).
+3. Autoriser une fois (ouvre le navigateur, se fait sur une machine avec
+   écran ; les tokens vont dans `.whoop_tokens.json`, gitignoré) :
+   ```bash
+   python3 scripts/whoop.py auth
+   ```
+4. Collecter : `python3 scripts/whoop.py collect` (cron toutes les 2 h dans
+   `deploy/crontab.example`). Le refresh token est renouvelé automatiquement.
+
+Pour le Pi : soit refaire `auth` sur le Pi (navigateur nécessaire), soit
+copier `.whoop_tokens.json` depuis le Mac (il n'est pas synchronisé par git).
+
 ## Installation sur le Raspberry Pi
 
 ```bash
