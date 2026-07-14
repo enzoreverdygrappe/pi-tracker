@@ -1,19 +1,20 @@
 /* ==========================================================================
-   ESNIA Tracker — thème dark luxury
+   ESNIA Tracker — thème dark luxury, langage visuel "data dashboard"
+   (sections numérotées, micro-labels espacés, chiffres en mono, heatmap).
    Cible : écran tactile 1024x600, kiosque Chromium, pas de survol souris.
    ========================================================================== */
 
 :root {
   /* Surfaces */
   --bg: #06080f;
-  --surface: #0c111d;
+  --surface: #0b101c;
   --surface-raised: #101728;
-  --border: rgba(148, 130, 70, 0.16);
-  --border-strong: rgba(212, 175, 55, 0.35);
+  --border: rgba(148, 130, 70, 0.14);
+  --border-strong: rgba(212, 175, 55, 0.38);
 
   /* Accents de marque (chrome UI uniquement) */
   --gold: #d4af37;
-  --gold-soft: rgba(212, 175, 55, 0.12);
+  --gold-soft: rgba(212, 175, 55, 0.1);
   --violet: #8b5cff;
   --violet-soft: rgba(139, 92, 255, 0.14);
 
@@ -24,9 +25,11 @@
   /* Encres */
   --ink: #ece9df;
   --ink-secondary: #9aa0b4;
-  --ink-muted: #5d6478;
+  --ink-muted: #565d72;
 
-  --radius: 14px;
+  --font-mono: "SF Mono", "JetBrains Mono", "Menlo", "DejaVu Sans Mono", monospace;
+
+  --radius: 12px;
   --tab-height: 84px;
 
   font-size: 16px;
@@ -52,8 +55,8 @@ html, body {
   flex-direction: column;
   height: 100vh;
   background:
-    radial-gradient(1200px 500px at 85% -10%, rgba(139, 92, 255, 0.08), transparent 60%),
-    radial-gradient(900px 400px at -10% 110%, rgba(212, 175, 55, 0.05), transparent 55%),
+    radial-gradient(1200px 500px at 85% -10%, rgba(139, 92, 255, 0.07), transparent 60%),
+    radial-gradient(900px 400px at -10% 110%, rgba(212, 175, 55, 0.04), transparent 55%),
     var(--bg);
 }
 
@@ -65,7 +68,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px 10px;
+  padding: 13px 24px 10px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -74,31 +77,30 @@ html, body {
 .brand-mark { color: var(--gold); font-size: 0.8rem; transform: translateY(-1px); }
 
 .brand-name {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.35em;
   color: var(--ink);
 }
 
 .brand-sub {
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
 
-.clock { display: flex; align-items: baseline; gap: 12px; }
+.clock { display: flex; align-items: baseline; gap: 12px; font-family: var(--font-mono); }
 
 #clock-time {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
   color: var(--gold);
 }
 
 #clock-date {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-secondary);
 }
@@ -110,115 +112,186 @@ html, body {
 .view-container {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 24px;
+  padding: 16px 24px;
   -webkit-overflow-scrolling: touch;
 }
 
-.view-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink-secondary);
+/* En-tête de vue : titre à gauche, statut LIVE à droite */
+
+.view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 14px;
 }
 
-.view-title em { color: var(--gold); font-style: normal; }
+.view-title {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
 
-/* Tuiles de stats */
+.view-title em { color: var(--gold); font-style: normal; }
+.view-title .sep { color: var(--ink-muted); margin: 0 6px; }
+
+.live-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Sections numérotées façon rapport : [01] TITRE ······················ */
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px 16px;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.section-num {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--gold);
+}
+
+.section-name {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.section-title .leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(154, 160, 180, 0.25);
+  transform: translateY(-3px);
+}
+
+.section-meta {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* Tuiles KPI denses */
 
 .stat-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .stat-tile {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 18px;
+  padding: 13px 16px 12px;
 }
 
 .stat-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-muted);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
 .stat-value {
-  font-size: 1.9rem;
+  font-family: var(--font-mono);
+  font-size: 1.85rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
   color: var(--ink);
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
 .stat-value small {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: var(--ink-secondary);
-  margin-left: 4px;
+  margin-left: 5px;
+  letter-spacing: 0.04em;
+}
+
+.stat-sub {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  margin-top: 6px;
 }
 
 .stat-tile.accent .stat-value { color: var(--gold); }
+.stat-tile.accent { border-color: var(--border-strong); }
 
-/* Panneaux */
+/* Liste type "top projects" : 01  date  note ······ valeur */
 
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  margin-bottom: 16px;
-}
+.ledger { list-style: none; font-family: var(--font-mono); }
 
-.panel-title {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-secondary);
-  margin-bottom: 12px;
-}
-
-/* Liste des sessions récentes */
-
-.session-list { list-style: none; }
-
-.session-list li {
+.ledger li {
   display: flex;
   align-items: baseline;
-  gap: 14px;
-  padding: 9px 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  font-size: 0.85rem;
+  gap: 12px;
+  padding: 8px 2px;
+  font-size: 0.78rem;
 }
 
-.session-list li:last-child { border-bottom: none; }
+.ledger .row-num { color: var(--gold); font-size: 0.68rem; }
 
-.session-date {
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
+.ledger .row-date { color: var(--ink-secondary); white-space: nowrap; }
 
-.session-calls {
-  color: var(--gold);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  min-width: 70px;
-}
-
-.session-note {
-  color: var(--ink-secondary);
+.ledger .row-note {
+  color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 55%;
 }
+
+.ledger .leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(154, 160, 180, 0.25);
+  transform: translateY(-3px);
+  min-width: 24px;
+}
+
+.ledger .row-value { color: var(--gold); font-weight: 600; white-space: nowrap; }
 
 /* États vide / erreur / placeholder */
 
@@ -227,38 +300,40 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-height: 220px;
+  gap: 12px;
+  min-height: 240px;
   color: var(--ink-muted);
   text-align: center;
+  font-size: 0.9rem;
 }
 
-.empty-state .glyph { font-size: 2rem; color: var(--violet); opacity: 0.6; }
+.empty-state .glyph { font-size: 1.9rem; color: var(--violet); opacity: 0.65; }
 
 .empty-state code {
-  font-family: "SF Mono", "Fira Mono", monospace;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--ink-secondary);
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 7px 12px;
 }
 
 /* --------------------------------------------------------------------------
-   Graphique SVG
+   Graphiques SVG
    -------------------------------------------------------------------------- */
 
 .chart-wrap { width: 100%; }
 .chart-wrap svg { display: block; width: 100%; height: auto; }
 
-.chart-grid-line { stroke: rgba(255, 255, 255, 0.06); stroke-width: 1; }
+.chart-grid-line { stroke: rgba(255, 255, 255, 0.055); stroke-width: 1; }
+
 .chart-axis-label {
   fill: var(--ink-muted);
   font-size: 11px;
-  font-family: inherit;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
 }
+
 .chart-line {
   fill: none;
   stroke: var(--data-gold);
@@ -266,16 +341,25 @@ html, body {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
 .chart-dot { fill: var(--data-gold); stroke: var(--bg); stroke-width: 2; }
 .chart-dot.is-active { fill: var(--violet); }
+
+.chart-bar { fill: var(--data-gold); }
+.chart-bar.is-zero { fill: rgba(255, 255, 255, 0.07); }
+.chart-bar.is-active { fill: var(--violet); }
+
 .chart-hit { fill: transparent; }
+
 .chart-last-label {
   fill: var(--ink);
   font-size: 12px;
   font-weight: 600;
-  font-family: inherit;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
 }
+
+.heatmap-cell { fill: rgba(255, 255, 255, 0.05); }
+.heatmap-cell.is-active { stroke: var(--violet); stroke-width: 1.5; }
 
 .chart-tooltip {
   position: fixed;
@@ -284,7 +368,8 @@ html, body {
   border: 1px solid var(--border-strong);
   border-radius: 10px;
   padding: 8px 12px;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
   color: var(--ink);
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 12px));
@@ -320,15 +405,15 @@ html, body {
   border-radius: var(--radius);
   color: var(--ink-secondary);
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.tab-button .tab-icon { font-size: 1.25rem; line-height: 1; }
+.tab-button .tab-icon { font-size: 1.2rem; line-height: 1; }
 
 .tab-button:active { background: var(--violet-soft); }
 

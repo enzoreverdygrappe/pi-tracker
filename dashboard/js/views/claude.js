@@ -1,11 +1,13 @@
 /**
  * Vue "Claude Usage" : sessions API Anthropic dans le temps.
  * Données : data/claude_usage.json via /api/data/claude_usage.
+ * Mise en page façon rapport : sections numérotées [01]..[03].
  */
 "use strict";
 
 (() => {
   const CHART_DAYS = 14;
+  const HEATMAP_WEEKS = 52;
   const RECENT_SESSIONS = 6;
   const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -13,21 +15,23 @@
     return date.toISOString().slice(0, 10);
   }
 
-  function shortDayLabel(date) {
-    return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+  /** Total des appels par jour : Map "YYYY-MM-DD" -> nombre. */
+  function callsByDay(entries) {
+    return entries.reduce((map, entry) => {
+      const key = String(entry.timestamp).slice(0, 10);
+      return new Map(map).set(key, (map.get(key) || 0) + (Number(entry.calls) || 0));
+    }, new Map());
   }
 
-  /** Agrège les appels par jour sur les N derniers jours (jours vides = 0). */
-  function aggregateCallsPerDay(entries, days) {
-    const callsByDay = entries.reduce((acc, entry) => {
-      const key = String(entry.timestamp).slice(0, 10);
-      return { ...acc, [key]: (acc[key] || 0) + (Number(entry.calls) || 0) };
-    }, {});
-
+  /** Série quotidienne des N derniers jours (jours vides = 0). */
+  function dailySeries(byDay, days) {
     const today = new Date();
     return Array.from({ length: days }, (_, offset) => {
       const date = new Date(today.getTime() - (days - 1 - offset) * DAY_MS);
-      return { label: shortDayLabel(date), value: callsByDay[dayKey(date)] || 0 };
+      return {
+        label: date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+        value: byDay.get(dayKey(date)) || 0,
+      };
     });
   }
 
@@ -36,28 +40,52 @@
     const callsLast7Days = entries
       .filter((entry) => String(entry.timestamp) >= weekAgo)
       .reduce((sum, entry) => sum + (Number(entry.calls) || 0), 0);
+    const totalCalls = entries
+      .reduce((sum, entry) => sum + (Number(entry.calls) || 0), 0);
     const last = entries[entries.length - 1];
-    const lastDate = last
-      ? new Date(last.timestamp).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
-      : "—";
-    return { totalSessions: entries.length, callsLast7Days, lastDate };
+    return {
+      totalSessions: entries.length,
+      totalCalls,
+      callsLast7Days,
+      lastDate: last
+        ? new Date(last.timestamp).toLocaleDateString("fr-FR",
+            { day: "numeric", month: "short" })
+        : "—",
+      lastTime: last
+        ? new Date(last.timestamp).toLocaleTimeString("fr-FR",
+            { hour: "2-digit", minute: "2-digit" })
+        : "",
+    };
   }
 
   function renderStats(stats) {
     return `
       <div class="stat-row">
         <div class="stat-tile accent">
-          <div class="stat-label">Sessions totales</div>
+          <div class="stat-label">Sessions</div>
           <div class="stat-value">${stats.totalSessions}</div>
+          <div class="stat-sub">${stats.totalCalls} appels au total</div>
         </div>
         <div class="stat-tile">
           <div class="stat-label">Appels · 7 jours</div>
           <div class="stat-value">${stats.callsLast7Days}<small>appels</small></div>
+          <div class="stat-sub">semaine glissante</div>
         </div>
         <div class="stat-tile">
           <div class="stat-label">Dernière session</div>
           <div class="stat-value">${stats.lastDate}</div>
+          <div class="stat-sub">${stats.lastTime}</div>
         </div>
+      </div>`;
+  }
+
+  function sectionHeader(num, name, meta) {
+    return `
+      <div class="section-title">
+        <span class="section-num">[${num}]</span>
+        <span class="section-name">${name}</span>
+        <span class="leader"></span>
+        ${meta ? `<span class="section-meta">${meta}</span>` : ""}
       </div>`;
   }
 
@@ -67,21 +95,29 @@
     return div.innerHTML;
   }
 
-  function renderSessionList(entries) {
+  function renderSessionLedger(entries) {
     const items = [...entries]
       .slice(-RECENT_SESSIONS)
       .reverse()
-      .map((entry) => {
+      .map((entry, index) => {
         const date = new Date(entry.timestamp).toLocaleString("fr-FR",
           { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
         return `<li>
-          <span class="session-date">${date}</span>
-          <span class="session-calls">${Number(entry.calls) || 0} appels</span>
-          <span class="session-note">${escapeHtml(entry.note || "")}</span>
+          <span class="row-num">${String(index + 1).padStart(2, "0")}</span>
+          <span class="row-date">${date}</span>
+          <span class="row-note">${escapeHtml(entry.note || "—")}</span>
+          <span class="leader"></span>
+          <span class="row-value">${Number(entry.calls) || 0}</span>
         </li>`;
       })
       .join("");
-    return `<ul class="session-list">${items}</ul>`;
+    return `<ul class="ledger">${items}</ul>`;
+  }
+
+  function formatUpdateTime(isoTimestamp) {
+    if (!isoTimestamp) return "";
+    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
+      { hour: "2-digit", minute: "2-digit" });
   }
 
   async function render(container) {
@@ -105,21 +141,37 @@
     }
 
     container.innerHTML = `
-      <div class="view-title"><em>Claude</em> · Usage API</div>
+      <div class="view-header">
+        <div class="view-title"><em>Claude</em><span class="sep">/</span>Usage API</div>
+        <div class="live-pill">
+          <span class="live-dot"></span>
+          <span>maj ${formatUpdateTime(result.data.updated_at)}</span>
+        </div>
+      </div>
       ${renderStats(computeStats(entries))}
-      <div class="panel">
-        <div class="panel-title">Appels par jour · ${CHART_DAYS} derniers jours</div>
+      <div class="section">
+        ${sectionHeader("01", "Activité", `${CHART_DAYS} derniers jours · appels/jour`)}
         <div id="claude-chart"></div>
       </div>
-      <div class="panel">
-        <div class="panel-title">Sessions récentes</div>
-        ${renderSessionList(entries)}
+      <div class="section">
+        ${sectionHeader("02", "Calendrier", `${HEATMAP_WEEKS} semaines`)}
+        <div id="claude-heatmap"></div>
+      </div>
+      <div class="section">
+        ${sectionHeader("03", "Sessions récentes", `${Math.min(entries.length, RECENT_SESSIONS)} / ${entries.length}`)}
+        ${renderSessionLedger(entries)}
       </div>`;
 
-    Charts.line(
+    const byDay = callsByDay(entries);
+    Charts.bars(
       document.getElementById("claude-chart"),
-      aggregateCallsPerDay(entries, CHART_DAYS),
+      dailySeries(byDay, CHART_DAYS),
       { unit: "appels", ariaLabel: "Appels API Claude par jour" }
+    );
+    Charts.heatmap(
+      document.getElementById("claude-heatmap"),
+      byDay,
+      { weeks: HEATMAP_WEEKS, unit: "appels", ariaLabel: "Calendrier des appels API Claude" }
     );
   }
 
