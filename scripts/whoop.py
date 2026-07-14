@@ -18,19 +18,18 @@ import os
 import secrets
 import sys
 import time
-import webbrowser
 from datetime import datetime, timedelta, timezone
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import DATA_DIR, PROJECT_ROOT, load_env
 from scripts.common import read_document, utc_now_iso, write_document_atomic
+from scripts.oauth_local import capture_auth_code
 
 CATEGORY = "whoop"
 DATA_FILE = DATA_DIR / f"{CATEGORY}.json"
@@ -45,7 +44,6 @@ DEFAULT_REDIRECT_URI = "http://localhost:8399/callback"
 REQUEST_TIMEOUT_SECONDS = 15
 # Cloudflare (erreur 1010) rejette le User-Agent Python par défaut.
 USER_AGENT = "pi-tracker/1.0 (personal dashboard)"
-AUTH_FLOW_TIMEOUT_SECONDS = 300
 TOKEN_EXPIRY_MARGIN_SECONDS = 60
 PAGE_LIMIT = 25
 MAX_PAGES = 20
@@ -135,29 +133,9 @@ def get_access_token() -> str:
 
 
 def run_auth_flow() -> None:
-    """Flow OAuth2 interactif : navigateur + mini serveur local de callback."""
+    """Flow OAuth2 interactif : navigateur + callback localhost (helper partagé)."""
     config = _require_client_config()
     state = secrets.token_urlsafe(16)
-    parsed = urlparse(config["redirect_uri"])
-    port = parsed.port or 80
-    captured: dict[str, str] = {}
-
-    class CallbackHandler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            query = parse_qs(urlparse(self.path).query)
-            captured["code"] = query.get("code", [""])[0]
-            captured["state"] = query.get("state", [""])[0]
-            captured["error"] = query.get("error", [""])[0]
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(
-                "<h2>pi-tracker connecté à WHOOP — tu peux fermer cet onglet.</h2>"
-                .encode("utf-8"))
-
-        def log_message(self, *_args):
-            pass  # silence des logs HTTP
-
     auth_url = f"{AUTH_URL}?" + urlencode({
         "response_type": "code",
         "client_id": config["client_id"],
@@ -165,25 +143,11 @@ def run_auth_flow() -> None:
         "scope": SCOPES,
         "state": state,
     })
-    print("Ouverture du navigateur pour autoriser WHOOP…\nSi rien ne s'ouvre :")
-    print(f"  {auth_url}\n")
-    webbrowser.open(auth_url)
-
-    server = HTTPServer(("localhost", port), CallbackHandler)
-    server.timeout = AUTH_FLOW_TIMEOUT_SECONDS
-    server.handle_request()  # une seule requête : le callback
-    server.server_close()
-
-    if captured.get("error"):
-        raise RuntimeError(f"Autorisation refusée : {captured['error']}")
-    if not captured.get("code"):
-        raise RuntimeError("Aucun code reçu (timeout ?) — réessayer.")
-    if captured.get("state") != state:
-        raise RuntimeError("State OAuth invalide — tentative rejetée.")
+    code = capture_auth_code(auth_url, config["redirect_uri"], state)
 
     tokens = _post_token_request({
         "grant_type": "authorization_code",
-        "code": captured["code"],
+        "code": code,
         "client_id": config["client_id"],
         "client_secret": config["client_secret"],
         "redirect_uri": config["redirect_uri"],

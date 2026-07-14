@@ -66,6 +66,10 @@
   /* Police d'affichage des titres (serif dans le thème claude) */
   --font-display: inherit;
 
+  /* Températures (météo) : chaud doré, froid bleu clair */
+  --temp-warm: #d4af37;
+  --temp-cold: #6fb0e0;
+
   font-size: 16px;
 }
 
@@ -133,6 +137,8 @@
   --ink: #3d3d3a;
   --ink-secondary: #6e6b64;
   --ink-muted: #a3a094;
+  --temp-warm: #b3552f;
+  --temp-cold: #2f6ca3;
   --font-display: "Tiempos Text", Georgia, "Times New Roman", serif;
   --radius: 14px;
   --glow-1: transparent;
@@ -277,6 +283,8 @@
   --ink: #26221b;
   --ink-secondary: #6b6455;
   --ink-muted: #98907e;
+  --temp-warm: #a86a10;
+  --temp-cold: #2f6ca3;
   --font-ui: var(--font-mono);
   --radius: 8px;
   --glow-1: transparent;
@@ -311,6 +319,8 @@
   --ink: #111111;
   --ink-secondary: #444444;
   --ink-muted: #8a877e;
+  --temp-warm: #c81e2e;
+  --temp-cold: #1f5c8a;
   --font-ui: var(--font-mono);
   --radius: 0px;
   --glow-1: transparent;
@@ -763,6 +773,142 @@ html, body {
 }
 
 .ledger .row-value { color: var(--accent); font-weight: 600; white-space: nowrap; }
+
+/* Agenda : heure en évidence à gauche, titre à droite */
+
+.agenda-list { list-style: none; }
+
+.agenda-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.agenda-row:last-child { border-bottom: none; }
+
+.agenda-time {
+  min-width: 88px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.agenda-time small {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.agenda-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.agenda-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agenda-loc {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Météo : héro + bande horaire scrollable + 3 jours */
+
+.weather-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 10px 0 6px;
+}
+
+.weather-hero-icon { color: var(--accent); }
+.weather-hero-icon .weather-icon { width: 92px; height: 92px; }
+
+.weather-temp {
+  font-family: var(--font-mono);
+  font-size: 4.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.weather-cond {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 6px;
+}
+
+.weather-details {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-secondary);
+  margin-top: 6px;
+}
+
+.temp-warm { color: var(--temp-warm); }
+.temp-cold { color: var(--temp-cold); }
+
+.weather-icon { width: 30px; height: 30px; color: var(--ink-secondary); }
+
+.hour-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.hour-cell {
+  min-width: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.hour-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+}
+
+.hour-temp {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.day-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.day-cell .weather-icon { width: 36px; height: 36px; }
+
+.day-range {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-mono);
+}
+
+.day-min { font-size: 0.85rem; color: var(--ink-muted); }
 
 /* États vide / erreur / placeholder */
 

@@ -71,6 +71,36 @@ Tests : `pytest tests/ -v`
 Pour le Pi : soit refaire `auth` sur le Pi (navigateur nécessaire), soit
 copier `.whoop_tokens.json` depuis le Mac (il n'est pas synchronisé par git).
 
+## Agenda (Google Calendar)
+
+1. Aller sur https://console.cloud.google.com → créer un projet (ex.
+   « pi-tracker »).
+2. **APIs & Services → Library** → activer « Google Calendar API ».
+3. **APIs & Services → OAuth consent screen** : type « External », remplir le
+   nom de l'app, s'ajouter soi-même dans « Test users » (pas besoin de faire
+   valider l'app par Google pour un usage perso).
+4. **APIs & Services → Credentials → Create credentials → OAuth client ID** :
+   type « **Desktop app** ». Copier le Client ID et le Client Secret dans
+   `.env` (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
+5. Autoriser une fois (navigateur, lecture seule de l'agenda principal) :
+   ```bash
+   python3 scripts/calendar_sync.py auth
+   ```
+6. Collecter : `python3 scripts/calendar_sync.py collect` (cron toutes les
+   15 min). Le token (`.google_tokens.json`, gitignoré) se rafraîchit seul.
+
+## Météo (Open-Meteo)
+
+Aucune clé API. La localisation vient de `.env` :
+
+```bash
+WEATHER_LAT=45.7578   # Lyon par défaut
+WEATHER_LON=4.8320
+WEATHER_CITY=Lyon     # ex. Champagnole : 46.7456 / 5.9086
+```
+
+Collecter : `python3 scripts/weather_sync.py collect` (cron toutes les 30 min).
+
 ## Installation sur le Raspberry Pi
 
 ```bash

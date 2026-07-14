@@ -9,6 +9,12 @@
 # les données arrivent sur le Pi via le sync GitHub.
 */30 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/claude_limits.py collect >> logs/collect.log 2>&1
 
+# Google Agenda toutes les 15 min
+*/15 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/calendar_sync.py collect >> logs/collect.log 2>&1
+
+# Météo toutes les 30 min
+*/30 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/weather_sync.py collect >> logs/collect.log 2>&1
+
 # Exemple de collecte périodique pour une future source de données :
 # 0 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/<source>.py >> logs/collect.log 2>&1
 
