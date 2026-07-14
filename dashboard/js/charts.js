@@ -19,7 +19,7 @@ const Charts = (() => {
   const BAR_GAP = 2;
   const TOOLTIP_HIDE_DELAY_MS = 2500;
 
-  /* Rampe séquentielle du thème courant (--heat-1..5), fallback or ESNIA. */
+  /* Rampe séquentielle du thème courant (--heat-1..5), fallback or Onyx. */
   const HEAT_FALLBACK = ["#2b2310", "#4e3d13", "#755c1a", "#9c7a20", "#c9a227"];
 
   function heatRamp() {

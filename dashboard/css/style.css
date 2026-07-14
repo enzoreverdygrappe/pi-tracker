@@ -1,14 +1,14 @@
 /* ==========================================================================
-   ESNIA Tracker — thèmes commutables inspirés des explorations
+   Tracker — thèmes commutables inspirés des explorations
    claude-usage-widget (Terminal Classic, Data Dashboard, HUD Gauge,
-   Print Receipt, Brutalist Mono) + thème maison "Esnia" dark luxury.
+   Print Receipt, Brutalist Mono) + thème maison "Onyx" dark luxury.
    Tout le rendu passe par les variables ci-dessous ; un thème = un bloc
    d'overrides sur :root[data-theme="..."].
    Cible : écran tactile 1024x600, kiosque Chromium, pas de survol souris.
    ========================================================================== */
 
 :root {
-  /* ------ Thème par défaut : ESNIA (dark luxury or/violet) ------ */
+  /* ------ Thème par défaut : Onyx (dark luxury or/violet) ------ */
 
   /* Surfaces */
   --bg: #06080f;

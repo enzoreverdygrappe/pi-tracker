@@ -24,7 +24,8 @@ tests/               Tests pytest
 
 Rien d'autre à toucher : l'API et la barre d'onglets s'adaptent automatiquement.
 
-**Thèmes** : 6 skins commutables au doigt via le bouton ◐ du header (Esnia,
+**Thèmes** : bouton ◐ du header — mode « Brand » par défaut (chaque vue dans
+l'identité de sa marque : claude.ai, WHOOP…), puis 6 skins globaux (Onyx,
 Data, Terminal, HUD, Receipt, Brutal — inspirés des explorations
 claude-usage-widget). Le choix persiste en localStorage ; `?theme=<id>` dans
 l'URL force un thème. Un thème = un bloc de variables CSS dans

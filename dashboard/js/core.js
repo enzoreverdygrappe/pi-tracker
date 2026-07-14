@@ -13,7 +13,7 @@ const Theme = (() => {
      Whoop -> app WHOOP…) ; les autres modes forcent un thème global. */
   const THEMES = [
     { id: "brand", label: "Brand" },
-    { id: "esnia", label: "Esnia" },
+    { id: "onyx", label: "Onyx" },
     { id: "data", label: "Data" },
     { id: "terminal", label: "Terminal" },
     { id: "hud", label: "HUD" },
@@ -21,7 +21,7 @@ const Theme = (() => {
     { id: "brutalist", label: "Brutal" },
   ];
   const STORAGE_KEY = "tracker-theme-v2";
-  const DEFAULT_BRAND_THEME = "esnia";
+  const DEFAULT_BRAND_THEME = "onyx";
 
   function find(themeId) {
     return THEMES.find((theme) => theme.id === themeId);

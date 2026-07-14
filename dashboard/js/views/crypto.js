@@ -13,5 +13,5 @@
     });
   }
 
-  Views.register({ id: "crypto", label: "Crypto", icon: "◈", brandTheme: "esnia", render });
+  Views.register({ id: "crypto", label: "Crypto", icon: "◈", brandTheme: "onyx", render });
 })();
