@@ -910,6 +910,116 @@ html, body {
 
 .day-min { font-size: 0.85rem; color: var(--ink-muted); }
 
+/* Goal : héro de progression + numpad tactile */
+
+.goal-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 6px 0 2px;
+}
+
+.goal-pct {
+  font-family: var(--font-mono);
+  font-size: 3.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.goal-hero-body { flex: 1; min-width: 0; }
+
+.goal-amounts {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+.goal-amounts b { color: var(--ink); font-size: 1.15rem; }
+.goal-target { color: var(--ink-muted); margin-left: 8px; font-size: 0.78rem; }
+
+.goal-bar { height: 16px; }
+
+.goal-add-btn {
+  min-height: 64px;
+  padding: 0 22px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.goal-add-btn:active { background: var(--accent-2-soft); }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.numpad {
+  width: 340px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.numpad-display {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: right;
+  padding: 4px 8px 12px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 14px;
+}
+
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.numpad-grid button,
+.numpad-actions button {
+  min-height: 56px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) / 1.5);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.numpad-grid button:active { background: var(--accent-2-soft); }
+
+.numpad-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+
+.numpad-actions .numpad-cancel { color: var(--ink-muted); }
+
+.numpad-actions .numpad-ok {
+  background: var(--accent-soft);
+  border-color: var(--border-strong);
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 /* États vide / erreur / placeholder */
 
 .empty-state {

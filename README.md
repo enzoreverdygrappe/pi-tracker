@@ -38,13 +38,17 @@ cd pi-tracker
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Logger une session Claude
-python3 scripts/claude_usage.py add --calls 12 --note "Session dev dashboard"
-python3 scripts/claude_usage.py list
+# Stats d'usage Claude Code (coût, tokens, modèles, top projets)
+# Parse ~/.claude en local — à lancer sur la machine où Claude Code tourne.
+python3 scripts/claude_stats.py collect
 
-# Collecter les limites de plan Claude (session 5h / hebdo / Fable)
+# Limites de plan Claude (session 5h / hebdo / Fable)
 # Nécessite Claude Code connecté sur la machine (token OAuth local).
 python3 scripts/claude_limits.py collect
+
+# Objectif financier (vue Goal — GOAL_AMOUNT/GOAL_DATE dans .env)
+python3 scripts/goal.py add --amount 150 --note "Mission client"
+python3 scripts/goal.py stats
 
 # Lancer le dashboard
 python3 server.py

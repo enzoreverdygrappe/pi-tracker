@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "category": "claude_stats",
+  "updated_at": "2026-07-18T16:26:28+00:00",
+  "entries": [
+    {
+      "date": "2026-06-20",
+      "messages": 59,
+      "input_tokens": 85,
+      "output_tokens": 23044,
+      "cache_read_tokens": 2179837,
+      "cache_write_tokens": 90645,
+      "cost_usd": 1.34,
+      "cache_saved_usd": 5.89
+    },
+    {
+      "date": "2026-06-23",
+      "messages": 331,
+      "input_tokens": 2405,
+      "output_tokens": 328982,
+      "cache_read_tokens": 32151222,
+      "cache_write_tokens": 1175055,
+      "cost_usd": 18.99,
+      "cache_saved_usd": 86.81
+    },
+    {
+      "date": "2026-06-25",
+      "messages": 47,
+      "input_tokens": 62,
+      "output_tokens": 59147,
+      "cache_read_tokens": 3320219,
+      "cache_write_tokens": 789159,
+      "cost_usd": 4.84,
+      "cache_saved_usd": 8.96
+    },
+    {
+      "date": "2026-06-26",
+      "messages": 32,
+      "input_tokens": 1360,
+      "output_tokens": 18719,
+      "cache_read_tokens": 2521992,
+      "cache_write_tokens": 156462,
+      "cost_usd": 1.63,
+      "cache_saved_usd": 6.81
+    },
+    {
+      "date": "2026-06-28",
+      "messages": 278,
+      "input_tokens": 2504,
+      "output_tokens": 256140,
+      "cache_read_tokens": 24066531,
+      "cache_write_tokens": 1012163,
+      "cost_usd": 14.87,
+      "cache_saved_usd": 64.98
+    },
+    {
+      "date": "2026-07-01",
+      "messages": 31,
+      "input_tokens": 43,
+      "output_tokens": 125442,
+      "cache_read_tokens": 3575139,
+      "cache_write_tokens": 301935,
+      "cost_usd": 4.09,
+      "cache_saved_usd": 9.65
+    },
+    {
+      "date": "2026-07-02",
+      "messages": 15,
+      "input_tokens": 38714,
+      "output_tokens": 2151,
+      "cache_read_tokens": 687628,
+      "cache_write_tokens": 72737,
+      "cost_usd": 0.42,
+      "cache_saved_usd": 1.24
+    },
+    {
+      "date": "2026-07-04",
+      "messages": 466,
+      "input_tokens": 278172,
+      "output_tokens": 1317305,
+      "cache_read_tokens": 119840807,
+      "cache_write_tokens": 2981393,
+      "cost_usd": 225.76,
+      "cache_saved_usd": 1078.57
+    },
+    {
+      "date": "2026-07-05",
+      "messages": 293,
+      "input_tokens": 33388,
+      "output_tokens": 276273,
+      "cache_read_tokens": 181656190,
+      "cache_write_tokens": 1934811,
+      "cost_usd": 219.99,
+      "cache_saved_usd": 1634.91
+    },
+    {
+      "date": "2026-07-06",
+      "messages": 111,
+      "input_tokens": 19044,
+      "output_tokens": 157405,
+      "cache_read_tokens": 77741305,
+      "cache_write_tokens": 4452737,
+      "cost_usd": 141.46,
+      "cache_saved_usd": 699.67
+    },
+    {
+      "date": "2026-07-07",
+      "messages": 32,
+      "input_tokens": 8820,
+      "output_tokens": 58697,
+      "cache_read_tokens": 20652399,
+      "cache_write_tokens": 4689713,
+      "cost_usd": 82.3,
+      "cache_saved_usd": 185.87
+    },
+    {
+      "date": "2026-07-11",
+      "messages": 66,
+      "input_tokens": 220,
+      "output_tokens": 25704,
+      "cache_read_tokens": 4475725,
+      "cache_write_tokens": 1743441,
+      "cost_usd": 21.61,
+      "cache_saved_usd": 8.21
+    },
+    {
+      "date": "2026-07-12",
+      "messages": 17,
+      "input_tokens": 34,
+      "output_tokens": 3000,
+      "cache_read_tokens": 871885,
+      "cache_write_tokens": 74336,
+      "cost_usd": 0.39,
+      "cache_saved_usd": 1.57
+    },
+    {
+      "date": "2026-07-13",
+      "messages": 141,
+      "input_tokens": 267,
+      "output_tokens": 151957,
+      "cache_read_tokens": 9682202,
+      "cache_write_tokens": 471278,
+      "cost_usd": 18.96,
+      "cache_saved_usd": 71.2
+    },
+    {
+      "date": "2026-07-14",
+      "messages": 390,
+      "input_tokens": 3434,
+      "output_tokens": 587206,
+      "cache_read_tokens": 82719864,
+      "cache_write_tokens": 1386345,
+      "cost_usd": 127.76,
+      "cache_saved_usd": 741.63
+    },
+    {
+      "date": "2026-07-15",
+      "messages": 39,
+      "input_tokens": 68,
+      "output_tokens": 86991,
+      "cache_read_tokens": 2289543,
+      "cache_write_tokens": 224235,
+      "cost_usd": 9.44,
+      "cache_saved_usd": 20.61
+    },
+    {
+      "date": "2026-07-17",
+      "messages": 216,
+      "input_tokens": 386,
+      "output_tokens": 531920,
+      "cache_read_tokens": 33103530,
+      "cache_write_tokens": 1127105,
+      "cost_usd": 73.79,
+      "cache_saved_usd": 297.93
+    },
+    {
+      "date": "2026-07-18",
+      "messages": 689,
+      "input_tokens": 1306,
+      "output_tokens": 1122116,
+      "cache_read_tokens": 141139644,
+      "cache_write_tokens": 8922745,
+      "cost_usd": 308.79,
+      "cache_saved_usd": 1270.26
+    }
+  ],
+  "today_models": {
+    "claude-fable-5": {
+      "output_tokens": 1122116,
+      "cost_usd": 308.79
+    }
+  },
+  "today_projects": [
+    {
+      "name": "~",
+      "output_tokens": 1122116
+    }
+  ]
+}

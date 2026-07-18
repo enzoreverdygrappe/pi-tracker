@@ -4,6 +4,10 @@
 # Sync GitHub quotidien des données (23h15, heure locale du Pi)
 15 23 * * * /home/pi/pi-tracker/sync.sh >> /home/pi/pi-tracker/logs/sync.log 2>&1
 
+# Stats d'usage Claude Code toutes les heures — sur la machine où
+# Claude Code tourne (parse local de ~/.claude, aucun appel réseau)
+0 * * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/claude_stats.py collect >> logs/collect.log 2>&1
+
 # Limites de plan Claude toutes les 30 min — à mettre sur la machine où
 # Claude Code est connecté (le Mac, ou le Pi après 'claude' login) ;
 # les données arrivent sur le Pi via le sync GitHub.

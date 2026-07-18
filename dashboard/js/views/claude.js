@@ -1,82 +1,50 @@
 /**
- * Vue "Claude Usage" : sessions API Anthropic dans le temps.
- * Données : data/claude_usage.json via /api/data/claude_usage.
- * Mise en page façon rapport : sections numérotées [01]..[03].
+ * Vue "Claude" : limites de plan + usage réel de Claude Code
+ * (coût équivalent API, tokens, modèles, top projets — données locales
+ * agrégées par scripts/claude_stats.py, porté de claude-usage-widget).
  */
 "use strict";
 
 (() => {
   const CHART_DAYS = 14;
   const HEATMAP_WEEKS = 52;
-  const RECENT_SESSIONS = 6;
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const HIGH_UTILIZATION_PCT = 80;
 
-  function dayKey(date) {
-    return date.toISOString().slice(0, 10);
+  /* ---------------------------------------------------------------- utils */
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = String(text);
+    return div.innerHTML;
   }
 
-  /** Total des appels par jour : Map "YYYY-MM-DD" -> nombre. */
-  function callsByDay(entries) {
-    return entries.reduce((map, entry) => {
-      const key = String(entry.timestamp).slice(0, 10);
-      return new Map(map).set(key, (map.get(key) || 0) + (Number(entry.calls) || 0));
-    }, new Map());
+  function formatUpdateTime(isoTimestamp) {
+    if (!isoTimestamp) return "";
+    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
+      { hour: "2-digit", minute: "2-digit" });
   }
 
-  /** Série quotidienne des N derniers jours (jours vides = 0). */
-  function dailySeries(byDay, days) {
-    const today = new Date();
-    return Array.from({ length: days }, (_, offset) => {
-      const date = new Date(today.getTime() - (days - 1 - offset) * DAY_MS);
-      return {
-        label: date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
-        value: byDay.get(dayKey(date)) || 0,
-      };
-    });
+  function fmtTokens(count) {
+    if (typeof count !== "number") return "—";
+    if (count >= 1_000_000) return `${(count / 1_000_000).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} M`;
+    if (count >= 1_000) return `${(count / 1_000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} k`;
+    return String(count);
   }
 
-  function computeStats(entries) {
-    const weekAgo = new Date(Date.now() - 7 * DAY_MS).toISOString();
-    const callsLast7Days = entries
-      .filter((entry) => String(entry.timestamp) >= weekAgo)
-      .reduce((sum, entry) => sum + (Number(entry.calls) || 0), 0);
-    const totalCalls = entries
-      .reduce((sum, entry) => sum + (Number(entry.calls) || 0), 0);
-    const last = entries[entries.length - 1];
-    return {
-      totalSessions: entries.length,
-      totalCalls,
-      callsLast7Days,
-      lastDate: last
-        ? new Date(last.timestamp).toLocaleDateString("fr-FR",
-            { day: "numeric", month: "short" })
-        : "—",
-      lastTime: last
-        ? new Date(last.timestamp).toLocaleTimeString("fr-FR",
-            { hour: "2-digit", minute: "2-digit" })
-        : "",
-    };
+  function fmtUsd(value) {
+    if (typeof value !== "number") return "—";
+    return `$${value.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`;
   }
 
-  function renderStats(stats) {
-    return `
-      <div class="stat-row">
-        <div class="stat-tile accent">
-          <div class="stat-label">Sessions</div>
-          <div class="stat-value">${stats.totalSessions}</div>
-          <div class="stat-sub">${stats.totalCalls} appels au total</div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Appels · 7 jours</div>
-          <div class="stat-value">${stats.callsLast7Days}<small>appels</small></div>
-          <div class="stat-sub">semaine glissante</div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Dernière session</div>
-          <div class="stat-value">${stats.lastDate}</div>
-          <div class="stat-sub">${stats.lastTime}</div>
-        </div>
-      </div>`;
+  /** "claude-fable-5" -> "Fable 5". */
+  function modelLabel(modelId) {
+    return modelId
+      .replace(/^claude-/, "")
+      .replace(/-\d{8}$/, "")
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
   }
 
   function sectionHeader(num, name, meta) {
@@ -89,38 +57,8 @@
       </div>`;
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = String(text);
-    return div.innerHTML;
-  }
+  /* ------------------------------------------------------ limites de plan */
 
-  function renderSessionLedger(entries) {
-    const items = [...entries]
-      .slice(-RECENT_SESSIONS)
-      .reverse()
-      .map((entry, index) => {
-        const date = new Date(entry.timestamp).toLocaleString("fr-FR",
-          { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-        return `<li>
-          <span class="row-num">${String(index + 1).padStart(2, "0")}</span>
-          <span class="row-date">${date}</span>
-          <span class="row-note">${escapeHtml(entry.note || "—")}</span>
-          <span class="leader"></span>
-          <span class="row-value">${Number(entry.calls) || 0}</span>
-        </li>`;
-      })
-      .join("");
-    return `<ul class="ledger">${items}</ul>`;
-  }
-
-  function formatUpdateTime(isoTimestamp) {
-    if (!isoTimestamp) return "";
-    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
-      { hour: "2-digit", minute: "2-digit" });
-  }
-
-  /** Temps restant avant reset : "4h 36m" / "12m" ; vide si passé/invalide. */
   function formatRemaining(resetsAt) {
     const remaining = new Date(resetsAt).getTime() - Date.now();
     if (!resetsAt || Number.isNaN(remaining) || remaining <= 0) return "";
@@ -130,15 +68,12 @@
       : `${minutes}m`;
   }
 
-  /** Échéance de reset hebdo : "lun. 12:00" ; vide si invalide. */
   function formatResetDay(resetsAt) {
     const date = new Date(resetsAt);
     if (!resetsAt || Number.isNaN(date.getTime())) return "";
     return date.toLocaleString("fr-FR",
       { weekday: "short", hour: "2-digit", minute: "2-digit" });
   }
-
-  const HIGH_UTILIZATION_PCT = 80;
 
   function limitBar(name, meta, pct) {
     const rounded = Math.round(pct);
@@ -155,13 +90,10 @@
       </div>`;
   }
 
-  /** Section barres de limites ; snapshot = dernière entrée de claude_limits. */
   function renderLimits(limitsResult) {
     const entries = limitsResult.success ? (limitsResult.data.entries || []) : [];
     const snapshot = entries[entries.length - 1];
-    const meta = snapshot
-      ? `maj ${formatUpdateTime(snapshot.timestamp)}`
-      : "";
+    const meta = snapshot ? `maj ${formatUpdateTime(snapshot.timestamp)}` : "";
 
     let body;
     if (!snapshot) {
@@ -186,62 +118,129 @@
     </div>`;
   }
 
+  /* ------------------------------------------------------------ usage réel */
+
+  function todayEntry(entries) {
+    const key = new Date().toISOString().slice(0, 10);
+    return entries.find((entry) => entry.date === key) || null;
+  }
+
+  function renderStats(today) {
+    return `
+      <div class="stat-row">
+        <div class="stat-tile accent">
+          <div class="stat-label">Coût · aujourd'hui</div>
+          <div class="stat-value">${fmtUsd(today ? today.cost_usd : 0)}</div>
+          <div class="stat-sub">cache : ${fmtUsd(today ? today.cache_saved_usd : 0)} économisés</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Messages</div>
+          <div class="stat-value">${today ? today.messages.toLocaleString("fr-FR") : 0}</div>
+          <div class="stat-sub">aujourd'hui</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Tokens out</div>
+          <div class="stat-value">${fmtTokens(today ? today.output_tokens : 0)}</div>
+          <div class="stat-sub">aujourd'hui</div>
+        </div>
+      </div>`;
+  }
+
+  function dailySeries(entries, field, days) {
+    const byDate = new Map(entries.map((entry) => [entry.date, entry]));
+    const today = new Date();
+    return Array.from({ length: days }, (_, offset) => {
+      const date = new Date(today.getTime() - (days - 1 - offset) * DAY_MS);
+      const key = date.toISOString().slice(0, 10);
+      const value = byDate.get(key) ? byDate.get(key)[field] : 0;
+      return {
+        label: date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+        value: typeof value === "number" ? Math.round(value * 100) / 100 : 0,
+      };
+    });
+  }
+
+  function renderModelLedger(todayModels) {
+    const models = Object.entries(todayModels || {})
+      .sort((a, b) => b[1].cost_usd - a[1].cost_usd);
+    if (models.length === 0) return "";
+    const items = models.map(([model, bucket], index) => `<li>
+        <span class="row-num">${String(index + 1).padStart(2, "0")}</span>
+        <span class="row-note">${escapeHtml(modelLabel(model))}</span>
+        <span class="row-date">${fmtTokens(bucket.output_tokens)} out</span>
+        <span class="leader"></span>
+        <span class="row-value">${fmtUsd(bucket.cost_usd)}</span>
+      </li>`).join("");
+    return `<div class="section">
+      ${sectionHeader("04", "Modèles · aujourd'hui", "équivalent pay-as-you-go")}
+      <ul class="ledger">${items}</ul>
+    </div>`;
+  }
+
+  function renderProjectLedger(projects) {
+    if (!projects || projects.length === 0) return "";
+    const items = projects.map((project, index) => `<li>
+        <span class="row-num">${String(index + 1).padStart(2, "0")}</span>
+        <span class="row-note">${escapeHtml(project.name)}</span>
+        <span class="leader"></span>
+        <span class="row-value">${fmtTokens(project.output_tokens)}</span>
+      </li>`).join("");
+    return `<div class="section">
+      ${sectionHeader("05", "Top projets · aujourd'hui", "tokens out")}
+      <ul class="ledger">${items}</ul>
+    </div>`;
+  }
+
+  /* ---------------------------------------------------------------- rendu */
+
   async function render(container) {
-    const [result, limitsResult] = await Promise.all([
-      fetchCategory("claude_usage"),
+    const [statsResult, limitsResult] = await Promise.all([
+      fetchCategory("claude_stats"),
       fetchCategory("claude_limits"),
     ]);
 
-    if (!result.success) {
+    if (!statsResult.success || (statsResult.data.entries || []).length === 0) {
       renderEmptyState(container, {
-        glyph: "◈", message: result.error,
-        hint: "python3 server.py",
+        glyph: "✳",
+        message: "Pas encore de statistiques d'usage Claude Code.",
+        hint: "python3 scripts/claude_stats.py collect",
       });
       return;
     }
 
-    const entries = result.data.entries || [];
-    if (entries.length === 0) {
-      renderEmptyState(container, {
-        glyph: "◇", message: "Aucune session enregistrée pour l'instant.",
-        hint: 'python3 scripts/claude_usage.py add --calls 12 --note "Ma session"',
-      });
-      return;
-    }
+    const entries = statsResult.data.entries;
+    const today = todayEntry(entries);
 
     container.innerHTML = `
       <div class="view-header">
-        <div class="view-title"><span class="brand-logo logo-claude"></span><em>Claude</em><span class="sep">/</span>Usage API</div>
+        <div class="view-title"><span class="brand-logo logo-claude"></span><em>Claude</em><span class="sep">/</span>Usage</div>
         <div class="live-pill">
           <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(result.data.updated_at)}</span>
+          <span>maj ${formatUpdateTime(statsResult.data.updated_at)}</span>
         </div>
       </div>
       ${renderLimits(limitsResult)}
-      ${renderStats(computeStats(entries))}
+      ${renderStats(today)}
       <div class="section">
-        ${sectionHeader("02", "Activité", `${CHART_DAYS} derniers jours · appels/jour`)}
-        <div id="claude-chart"></div>
+        ${sectionHeader("02", "Coût par jour", `${CHART_DAYS} derniers jours · $ équiv. API`)}
+        <div id="claude-cost-chart"></div>
       </div>
       <div class="section">
-        ${sectionHeader("03", "Calendrier", `${HEATMAP_WEEKS} semaines`)}
+        ${sectionHeader("03", "Calendrier", `${HEATMAP_WEEKS} semaines · messages/jour`)}
         <div id="claude-heatmap"></div>
       </div>
-      <div class="section">
-        ${sectionHeader("04", "Sessions récentes", `${Math.min(entries.length, RECENT_SESSIONS)} / ${entries.length}`)}
-        ${renderSessionLedger(entries)}
-      </div>`;
+      ${renderModelLedger(statsResult.data.today_models)}
+      ${renderProjectLedger(statsResult.data.today_projects)}`;
 
-    const byDay = callsByDay(entries);
     Charts.bars(
-      document.getElementById("claude-chart"),
-      dailySeries(byDay, CHART_DAYS),
-      { unit: "appels", ariaLabel: "Appels API Claude par jour" }
+      document.getElementById("claude-cost-chart"),
+      dailySeries(entries, "cost_usd", CHART_DAYS),
+      { unit: "$", ariaLabel: "Coût équivalent API par jour" }
     );
     Charts.heatmap(
       document.getElementById("claude-heatmap"),
-      byDay,
-      { weeks: HEATMAP_WEEKS, unit: "appels", ariaLabel: "Calendrier des appels API Claude" }
+      new Map(entries.map((entry) => [entry.date, entry.messages || 0])),
+      { weeks: HEATMAP_WEEKS, unit: "messages", ariaLabel: "Messages Claude Code par jour" }
     );
   }
 
