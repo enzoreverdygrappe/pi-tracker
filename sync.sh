@@ -8,6 +8,23 @@ cd "$PROJECT_ROOT"
 
 log() { printf '[%s] %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*"; }
 
+# Garde-fou anti-débordement : borne chaque .log à ses 5000 dernières lignes.
+# logrotate (deploy/pi-tracker.logrotate) fait la vraie rotation datée ; ceci
+# protège la carte SD même si logrotate n'est pas installé.
+MAX_LOG_LINES=5000
+prune_logs() {
+    local logs_dir="$PROJECT_ROOT/logs"
+    [ -d "$logs_dir" ] || return 0
+    for logfile in "$logs_dir"/*.log; do
+        [ -f "$logfile" ] || continue
+        if [ "$(wc -l < "$logfile")" -gt "$MAX_LOG_LINES" ]; then
+            tail -n "$MAX_LOG_LINES" "$logfile" > "$logfile.tmp" \
+                && mv "$logfile.tmp" "$logfile" || rm -f "$logfile.tmp"
+        fi
+    done
+}
+prune_logs
+
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     log "ERREUR : $PROJECT_ROOT n'est pas un dépôt git." >&2
     exit 1

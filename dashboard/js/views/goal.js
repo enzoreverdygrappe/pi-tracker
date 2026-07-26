@@ -17,12 +17,6 @@
     return div.innerHTML;
   }
 
-  function formatUpdateTime(isoTimestamp) {
-    if (!isoTimestamp) return "";
-    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
-      { hour: "2-digit", minute: "2-digit" });
-  }
-
   function sectionHeader(num, name, meta) {
     return `
       <div class="section-title">
@@ -197,10 +191,7 @@
     container.innerHTML = `
       <div class="view-header">
         <div class="view-title"><em>Goal</em><span class="sep">/</span>Mission</div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(summary.updated_at) || "—"}</span>
-        </div>
+        ${updatedPill(summary.updated_at, Number.POSITIVE_INFINITY)}
       </div>
       ${renderHero(summary)}
       ${renderStats(summary)}

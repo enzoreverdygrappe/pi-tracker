@@ -214,10 +214,7 @@
     container.innerHTML = `
       <div class="view-header">
         <div class="view-title"><span class="brand-logo logo-claude"></span><em>Claude</em><span class="sep">/</span>Usage</div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(statsResult.data.updated_at)}</span>
-        </div>
+        ${updatedPill(statsResult.data.updated_at, 24)}
       </div>
       ${renderLimits(limitsResult)}
       ${renderStats(today)}

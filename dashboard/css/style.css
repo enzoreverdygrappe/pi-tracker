@@ -498,6 +498,15 @@ html, body {
   50% { opacity: 0.35; }
 }
 
+/* Données périmées : badge ambre fixe (pas de pulsation "live"). */
+.live-pill.is-stale { color: var(--status-warn); }
+
+.live-pill.is-stale .live-dot {
+  background: var(--status-warn);
+  box-shadow: 0 0 8px var(--status-warn);
+  animation: none;
+}
+
 /* Sections numérotées façon rapport : [01] TITRE ······················ */
 
 .section {

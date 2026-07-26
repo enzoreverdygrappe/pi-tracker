@@ -136,12 +136,6 @@
     return `<ul class="ledger">${items}</ul>`;
   }
 
-  function formatUpdateTime(isoTimestamp) {
-    if (!isoTimestamp) return "";
-    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
-      { hour: "2-digit", minute: "2-digit" });
-  }
-
   function drawRings(entry) {
     const rings = document.getElementById("whoop-rings");
     Charts.ring(rings, {
@@ -171,10 +165,7 @@
     container.innerHTML = `
       <div class="view-header">
         <div class="view-title"><span class="brand-logo logo-whoop"></span><em>Whoop</em><span class="sep">/</span>Journal</div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(state.updatedAt)}</span>
-        </div>
+        ${updatedPill(state.updatedAt, 6)}
       </div>
       ${renderDayNav(entry)}
       <div class="ring-row" id="whoop-rings"></div>

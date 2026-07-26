@@ -107,40 +107,69 @@ Collecter : `python3 scripts/weather_sync.py collect` (cron toutes les 30 min).
 
 ## Installation sur le Raspberry Pi
 
+### Installation automatique (recommandé)
+
 ```bash
-sudo apt update
-sudo apt install -y git python3-pip chromium-browser unclutter
 git clone git@github.com:<ton-user>/pi-tracker.git ~/pi-tracker
 cd ~/pi-tracker
-pip3 install --break-system-packages flask   # ou via venv
-cp .env.example .env                          # puis remplir les clés
+./deploy/install.sh
 ```
 
-### Serveur au boot (systemd)
+`deploy/install.sh` fait tout, de façon idempotente (relançable sans risque) :
+paquets système, dépendances Python, dossier `logs/`, copie de `.env.example`
+vers `.env`, service systemd (serveur au boot, redémarrage auto), autostart du
+kiosque, rotation des logs (logrotate) et tâches cron. Il termine en listant les
+étapes manuelles restantes.
+
+### Étapes manuelles après install.sh
+
+1. **Remplir `.env`** : clés WHOOP + Google, coordonnées météo, objectif Goal.
+2. **Auth WHOOP** : `python3 scripts/whoop.py auth`
+3. **Auth Google** : `python3 scripts/calendar_sync.py auth`
+4. **Auto-login graphique au boot** — sans lui, le kiosque ne peut pas se lancer
+   seul après un redémarrage ou une coupure de courant :
+   ```bash
+   sudo raspi-config
+   #   1 System Options  ->  S5 Boot / Auto Login  ->  Desktop Autologin
+   ```
+   Équivalent non-interactif :
+   ```bash
+   sudo raspi-config nonint do_boot_behaviour B4   # Desktop Autologin
+   ```
+5. **Redémarrer** : `sudo reboot`
+
+Après reboot : dashboard sur `http://127.0.0.1:8321`, plein écran automatique.
+
+### Ce que fait le kiosque (deploy/kiosk.sh)
+
+- **Écran toujours allumé** : screensaver et veille DPMS désactivés (`xset`).
+- **Curseur masqué en continu** : démon `unclutter`.
+- **Bureau/barre des tâches masqués** pour un affichage 100 % kiosque
+  (`HIDE_DESKTOP=1`, valeur par défaut).
+- **Watchdog Chromium** : si Chromium plante, il est relancé automatiquement
+  (boucle) ; les drapeaux de crash sont effacés pour ne jamais afficher
+  « Restaurer les pages ».
+
+Le **serveur** est protégé côté systemd (`Restart=always`, `RestartSec=5`, garde
+anti-crash-loop). Pour sortir du kiosque : brancher un clavier et `Alt+F4`, ou
+`sudo systemctl stop tracker`.
+
+### Mise à jour après un push GitHub
 
 ```bash
-sudo cp deploy/tracker.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now tracker.service
+cd ~/pi-tracker && ./deploy/update.sh
 ```
 
-### Kiosque Chromium au démarrage de la session graphique
+`deploy/update.sh` fait `git pull --ff-only`, réinstalle les dépendances Python
+et redémarre `tracker.service`, avec un message clair et un guide de résolution
+si le `git pull` échoue (divergence data/ locale non poussée).
 
-Raspberry Pi OS (LXDE / labwc) — ajouter à l'autostart :
+### Rotation des logs
 
-```bash
-mkdir -p ~/.config/autostart
-cat > ~/.config/autostart/tracker-kiosk.desktop <<'EOF'
-[Desktop Entry]
-Type=Application
-Name=Tracker Kiosk
-Exec=/home/pi/pi-tracker/deploy/kiosk.sh
-EOF
-```
-
-`deploy/kiosk.sh` attend que le serveur réponde puis lance Chromium en
-`--kiosk` avec le curseur masqué (unclutter). Pour sortir du kiosque :
-brancher un clavier et `Alt+F4`, ou `sudo systemctl stop tracker`.
+`deploy/pi-tracker.logrotate` (installé dans `/etc/logrotate.d/` par
+`install.sh`) fait une rotation quotidienne, 30 jours d'historique, compressée.
+`sync.sh` borne en plus chaque `.log` à 5000 lignes en garde-fou — la carte SD
+ne peut pas se remplir de logs.
 
 ### Écran tactile HAMTYSAN 10.1"
 
@@ -187,4 +216,8 @@ crontab -e
 
 - Le serveur écoute uniquement sur `127.0.0.1` (rien d'exposé sur le réseau).
 - Les noms de catégories de l'API sont validés par whitelist (anti path-traversal).
-- `.env` (clés API) est ignoré par git ; seul `.env.example` est versionné.
+- `.env` (clés API), `.whoop_tokens.json` et `.google_tokens.json` sont ignorés
+  par git ; seul `.env.example` (sans valeurs) est versionné.
+- Aucun secret n'est écrit dans les logs : les scripts ne journalisent que des
+  messages d'état et des données de tracking, jamais les tokens ni les clés.
+- Seul `data/` (métriques non sensibles) est poussé sur GitHub par `sync.sh`.

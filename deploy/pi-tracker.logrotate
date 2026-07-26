@@ -1,0 +1,13 @@
+# Rotation des logs pi-tracker — évite que les .log saturent la carte SD.
+# Installé par deploy/install.sh dans /etc/logrotate.d/pi-tracker
+# (les chemins /home/pi/pi-tracker et l'utilisateur y sont adaptés).
+/home/pi/pi-tracker/logs/*.log {
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su pi pi
+}

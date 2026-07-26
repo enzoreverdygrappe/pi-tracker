@@ -101,3 +101,37 @@ function renderEmptyState(container, { glyph, message, hint }) {
       ${hint ? `<code>${hint}</code>` : ""}
     </div>`;
 }
+
+/** Âge des données en heures depuis un timestamp ISO ; null si absent/invalide. */
+function dataAgeHours(isoTimestamp) {
+  if (!isoTimestamp) return null;
+  const ageMs = Date.now() - new Date(isoTimestamp).getTime();
+  if (Number.isNaN(ageMs)) return null;
+  return ageMs / 3_600_000;
+}
+
+/** Âge lisible : "12 min" / "5 h" / "3 j". */
+function formatAge(hours) {
+  if (hours >= 48) return `${Math.floor(hours / 24)} j`;
+  if (hours >= 1) return `${Math.floor(hours)} h`;
+  return `${Math.max(1, Math.floor(hours * 60))} min`;
+}
+
+/**
+ * Pastille "maj HH:MM" pour l'en-tête d'une vue. Passe en état "non à jour"
+ * (badge ambre) quand les données dépassent maxAgeHours — un indicateur
+ * visible vaut mieux qu'un affichage muet de données périmées.
+ */
+function updatedPill(isoTimestamp, maxAgeHours = 6) {
+  const age = dataAgeHours(isoTimestamp);
+  const time = isoTimestamp
+    ? new Date(isoTimestamp).toLocaleTimeString("fr-FR",
+        { hour: "2-digit", minute: "2-digit" })
+    : "—";
+  const isStale = age !== null && age > maxAgeHours;
+  const label = isStale ? `non à jour · ${formatAge(age)}` : `maj ${time}`;
+  return `<div class="live-pill${isStale ? " is-stale" : ""}">
+      <span class="live-dot"></span>
+      <span>${label}</span>
+    </div>`;
+}

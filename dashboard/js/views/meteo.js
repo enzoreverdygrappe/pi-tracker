@@ -81,12 +81,6 @@
       </div>`;
   }
 
-  function formatUpdateTime(isoTimestamp) {
-    if (!isoTimestamp) return "";
-    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
-      { hour: "2-digit", minute: "2-digit" });
-  }
-
   async function render(container) {
     const result = await fetchCategory("weather");
     const entries = result.success ? (result.data.entries || []) : [];
@@ -106,10 +100,7 @@
     container.innerHTML = `
       <div class="view-header">
         <div class="view-title"><em>Météo</em><span class="sep">/</span>${snapshot.city || ""}</div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(snapshot.timestamp)}</span>
-        </div>
+        ${updatedPill(snapshot.timestamp, 3)}
       </div>
       <div class="section">${renderHero(snapshot)}</div>
       <div class="section">

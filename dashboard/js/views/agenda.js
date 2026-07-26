@@ -89,12 +89,6 @@
     </div>`;
   }
 
-  function formatUpdateTime(isoTimestamp) {
-    if (!isoTimestamp) return "";
-    return new Date(isoTimestamp).toLocaleTimeString("fr-FR",
-      { hour: "2-digit", minute: "2-digit" });
-  }
-
   async function render(container) {
     const result = await fetchCategory("calendar");
 
@@ -120,10 +114,7 @@
     const header = `
       <div class="view-header">
         <div class="view-title"><em>Agenda</em><span class="sep">/</span>7 prochains jours</div>
-        <div class="live-pill">
-          <span class="live-dot"></span>
-          <span>maj ${formatUpdateTime(result.data.updated_at)}</span>
-        </div>
+        ${updatedPill(result.data.updated_at, 3)}
       </div>`;
     container.innerHTML = header + groupByDay(events).map(renderDayGroup).join("");
   }

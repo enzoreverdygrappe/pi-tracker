@@ -26,5 +26,5 @@
 # Nécessite l'auth faite une fois (scripts/whoop.py auth) sur cette machine.
 0 */2 * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/whoop.py collect >> logs/collect.log 2>&1
 
-# Purge des logs au 1er du mois (garde les 500 dernières lignes)
-0 0 1 * * cd /home/pi/pi-tracker/logs && for f in *.log; do tail -n 500 "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done
+# Rotation des logs : gérée par logrotate (deploy/pi-tracker.logrotate,
+# installé par deploy/install.sh) + garde-fou dans sync.sh. Rien à ajouter ici.
