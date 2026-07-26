@@ -589,9 +589,15 @@ html, body {
 
 .limit-fill {
   height: 100%;
+  width: 100%;
   border-radius: calc(var(--radius) / 2);
   background: var(--data-accent);
-  transition: width 300ms ease;
+  /* Remplissage via scaleX (origine à gauche) plutôt que width : reste sur
+     le compositeur, pas de layout/paint — important sur le GPU faible du Pi.
+     Le .limit-track clippe déjà les coins arrondis extérieurs. */
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 300ms ease;
 }
 
 .limit-row.is-high .limit-fill { background: var(--accent); }

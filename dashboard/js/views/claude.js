@@ -85,7 +85,7 @@
           <span class="limit-meta">${meta}<b>${rounded}%</b></span>
         </div>
         <div class="limit-track">
-          <div class="limit-fill" style="width:${Math.min(100, Math.max(0, pct))}%"></div>
+          <div class="limit-fill" style="transform:scaleX(${Math.min(100, Math.max(0, pct)) / 100})"></div>
         </div>
       </div>`;
   }

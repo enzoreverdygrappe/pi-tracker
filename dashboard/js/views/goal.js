@@ -40,7 +40,7 @@
                 · ${config.goal_date}</span>
             </div>
             <div class="limit-track goal-bar">
-              <div class="limit-fill" style="width:${Math.min(100, stats.progress_pct)}%"></div>
+              <div class="limit-fill" style="transform:scaleX(${Math.min(100, stats.progress_pct) / 100})"></div>
             </div>
           </div>
           <button type="button" id="goal-add-btn" class="goal-add-btn">+ Ajouter</button>
