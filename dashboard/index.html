@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Tracker</title>
+  <title>ENSIA · Tracker</title>
+  <!-- Google Fonts (charte ENSIA v2) : si le kiosque est hors ligne,
+       les fallbacks locaux de style.css prennent le relais. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-mark">◆</span>
-        <span class="brand-name">TRACKER</span>
-        <span class="brand-sub">Dashboard personnel</span>
+        <img class="brand-mark" src="assets/ensia-logo-inverse.svg" alt="ENSIA">
+        <span class="brand-sub">Tracker</span>
       </div>
       <div class="topbar-right">
-        <button type="button" id="theme-button" class="theme-button">
-          <span class="theme-glyph">◐</span>
-          <span id="theme-label">Brand</span>
-        </button>
         <div class="clock">
           <span id="clock-time">--:--</span>
-          <span id="clock-date">—</span>
+          <span id="clock-date">--</span>
         </div>
       </div>
     </header>

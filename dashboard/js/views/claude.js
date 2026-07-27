@@ -1,6 +1,6 @@
 /**
  * Vue "Claude" : limites de plan + usage réel de Claude Code
- * (coût équivalent API, tokens, modèles, top projets — données locales
+ * (coût équivalent API, tokens, modèles, top projets : données locales
  * agrégées par scripts/claude_stats.py, porté de claude-usage-widget).
  */
 "use strict";
@@ -26,14 +26,14 @@
   }
 
   function fmtTokens(count) {
-    if (typeof count !== "number") return "—";
+    if (typeof count !== "number") return "--";
     if (count >= 1_000_000) return `${(count / 1_000_000).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} M`;
     if (count >= 1_000) return `${(count / 1_000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} k`;
     return String(count);
   }
 
   function fmtUsd(value) {
-    if (typeof value !== "number") return "—";
+    if (typeof value !== "number") return "--";
     return `$${value.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`;
   }
 
@@ -97,7 +97,7 @@
 
     let body;
     if (!snapshot) {
-      body = `<div class="limit-hint">Pas encore de données —
+      body = `<div class="limit-hint">Pas encore de données :
         lancer <code>python3 scripts/claude_limits.py collect</code>
         sur la machine connectée à Claude Code.</div>`;
     } else {

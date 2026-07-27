@@ -1,5 +1,5 @@
 /**
- * Vue "Whoop" : reprend les codes de l'app WHOOP — navigation par jour,
+ * Vue "Whoop" : reprend les codes de l'app WHOOP : navigation par jour,
  * anneaux Sommeil / Récupération / Effort, tuiles métriques, historique.
  * Chaque jour affiche SES données (pas de mélange entre jours) ; le cycle
  * du jour en cours est signalé tant que WHOOP ne l'a pas clôturé.
@@ -38,7 +38,7 @@
   }
 
   function fmt(value, suffix = "") {
-    return (value === null || value === undefined) ? "—" : `${value}${suffix}`;
+    return (value === null || value === undefined) ? "--" : `${value}${suffix}`;
   }
 
   /** Couleur de l'anneau récupération par zone, comme dans l'app WHOOP. */
@@ -153,7 +153,7 @@
       display: typeof entry.strain === "number"
         ? entry.strain.toLocaleString("fr-FR",
             { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-        : "—",
+        : "--",
       label: "Effort", color: "var(--metric-strain)",
     });
   }

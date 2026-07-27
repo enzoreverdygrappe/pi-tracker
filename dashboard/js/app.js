@@ -45,18 +45,6 @@
     });
   }
 
-  function setupThemeButton() {
-    const button = document.getElementById("theme-button");
-    const label = document.getElementById("theme-label");
-    label.textContent = Theme.current().label;
-    button.addEventListener("pointerdown", () => {
-      label.textContent = Theme.cycle().label;
-      Theme.applyFor(activeView);
-      /* Re-rendu : les couleurs inline (heatmap) suivent le nouveau thème. */
-      if (activeView) activateView(activeView, { force: true });
-    });
-  }
-
   function startClock() {
     const timeNode = document.getElementById("clock-time");
     const dateNode = document.getElementById("clock-date");
@@ -78,7 +66,6 @@
       return;
     }
     buildTabBar(views);
-    setupThemeButton();
     startClock();
     /* ?view=<id> dans l'URL choisit la vue initiale (deep-link kiosque/test). */
     const requested = new URLSearchParams(location.search).get("view");

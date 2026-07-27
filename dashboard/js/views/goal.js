@@ -1,5 +1,5 @@
 /**
- * Vue "Goal" : objectif financier — porté de money-mission-terminal.
+ * Vue "Goal" : objectif financier : porté de money-mission-terminal.
  * Progression, rythme/jour, projection, et ajout de revenus au doigt
  * (numpad tactile -> POST /api/goal/add).
  */
@@ -7,7 +7,7 @@
 
 (() => {
   function fmtMoney(value, currency) {
-    if (typeof value !== "number") return "—";
+    if (typeof value !== "number") return "--";
     return `${value.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ${currency}`;
   }
 
@@ -74,7 +74,7 @@
     if (!summary.recent.length) {
       return `<div class="section">
         ${sectionHeader("02", "Dernières entrées", "")}
-        <div class="limit-hint">Aucune entrée — le bouton + Ajouter, ou
+        <div class="limit-hint">Aucune entrée : le bouton + Ajouter, ou
         <code>python3 scripts/goal.py add --amount 150 --note "..."</code></div>
       </div>`;
     }
@@ -84,7 +84,7 @@
       return `<li>
         <span class="row-num">${String(index + 1).padStart(2, "0")}</span>
         <span class="row-date">${date}</span>
-        <span class="row-note">${escapeHtml(entry.note || "—")}</span>
+        <span class="row-note">${escapeHtml(entry.note || "--")}</span>
         <span class="leader"></span>
         <span class="row-value">+${fmtMoney(entry.amount, summary.config.currency)}</span>
       </li>`;

@@ -18,7 +18,7 @@
   }
 
   function fmtTemp(tempC) {
-    return typeof tempC === "number" ? `${Math.round(tempC)}°` : "—";
+    return typeof tempC === "number" ? `${Math.round(tempC)}°` : "--";
   }
 
   function renderHero(snapshot) {

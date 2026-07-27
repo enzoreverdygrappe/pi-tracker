@@ -1,7 +1,13 @@
-# Secrets — ne JAMAIS commiter
+# Secrets : ne JAMAIS commiter
 .env
 .whoop_tokens.json
 .google_tokens.json
+
+# Données personnelles : jamais poussées (le dépôt GitHub est PUBLIC).
+# Agenda et finances restent locaux au Pi ; les retirer d'ici uniquement
+# si le dépôt passe en privé et que la sauvegarde est voulue.
+data/calendar.json
+data/goal.json
 
 # Python
 __pycache__/

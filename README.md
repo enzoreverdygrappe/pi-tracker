@@ -24,12 +24,13 @@ tests/               Tests pytest
 
 Rien d'autre à toucher : l'API et la barre d'onglets s'adaptent automatiquement.
 
-**Thèmes** : bouton ◐ du header — mode « Brand » par défaut (chaque vue dans
-l'identité de sa marque : claude.ai, WHOOP…), puis 6 skins globaux (Onyx,
-Data, Terminal, HUD, Receipt, Brutal — inspirés des explorations
-claude-usage-widget). Le choix persiste en localStorage ; `?theme=<id>` dans
-l'URL force un thème. Un thème = un bloc de variables CSS dans
-`dashboard/css/style.css`.
+**Design** : charte ENSIA v2 « Encre et laiton », déclinaison nuit
+(fond #05070F, encre #0B1220, texte #F3F0E9, laiton clair #C9A75B, bordures
+laiton à 22 %, radius 2 px, aucun dégradé ni glow). Typo : EB Garamond
+(wordmark), Instrument Sans (UI), DM Mono pour tous les chiffres (règle du
+relevé) ; Google Fonts chargées si le réseau est là, fallbacks locaux sinon.
+Thème unique : toutes les variables vivent dans `dashboard/css/style.css`
+(les anciens skins v1 Onyx/Terminal/HUD... sont retirés).
 
 ## Démarrage rapide (dev, Mac/Linux)
 

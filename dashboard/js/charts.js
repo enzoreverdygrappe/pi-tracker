@@ -1,5 +1,5 @@
 /**
- * Mini bibliothèque de graphiques SVG — zéro dépendance.
+ * Mini bibliothèque de graphiques SVG : zéro dépendance.
  * Une seule série par graphique (une mesure = un graphique, jamais de double axe).
  * Tactile : chaque marque a une zone de tap large qui affiche un tooltip.
  *
@@ -19,8 +19,8 @@ const Charts = (() => {
   const BAR_GAP = 2;
   const TOOLTIP_HIDE_DELAY_MS = 2500;
 
-  /* Rampe séquentielle du thème courant (--heat-1..5), fallback or Onyx. */
-  const HEAT_FALLBACK = ["#2b2310", "#4e3d13", "#755c1a", "#9c7a20", "#c9a227"];
+  /* Rampe séquentielle du thème (--heat-1..5), fallback laiton ENSIA. */
+  const HEAT_FALLBACK = ["#2e2712", "#4c3f1c", "#6e5a26", "#9a7b33", "#c9a75b"];
 
   function heatRamp() {
     const styles = getComputedStyle(document.documentElement);
@@ -273,7 +273,7 @@ const Charts = (() => {
         const value = valueByDay.get(key) || 0;
         const cell = el("rect", {
           class: "heatmap-cell",
-          x, y: TOP + day * (CELL + GAP), width: CELL, height: CELL, rx: 3,
+          x, y: TOP + day * (CELL + GAP), width: CELL, height: CELL, rx: 2,
         });
         /* style inline : prioritaire sur la règle CSS .heatmap-cell */
         if (value > 0) cell.style.fill = heatColor(ramp, value, maxValue);
@@ -300,7 +300,7 @@ const Charts = (() => {
    */
   function ring(container, options = {}) {
     const {
-      value = null, maxValue = 100, display = "—", unit = "",
+      value = null, maxValue = 100, display = "--", unit = "",
       label = "", color = "var(--data-accent)",
     } = options;
     const SIZE = 150;

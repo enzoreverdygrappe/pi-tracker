@@ -5,65 +5,35 @@
 "use strict";
 
 /**
- * Thèmes d'affichage, inspirés des explorations claude-usage-widget.
- * Un thème = un bloc de variables CSS sur :root[data-theme="..."].
+ * Thème unique : charte ENSIA v2 « Encre et laiton », déclinaison nuit
+ * (variables CSS sur :root dans style.css). L'API Theme est conservée pour
+ * les appelants (app.js) mais ne fait plus que poser data-theme="ensia".
  */
 const Theme = (() => {
-  /* "brand" = chaque vue dans l'identité de sa marque (Claude -> claude.ai,
-     Whoop -> app WHOOP…) ; les autres modes forcent un thème global. */
-  const THEMES = [
-    { id: "brand", label: "Brand" },
-    { id: "onyx", label: "Onyx" },
-    { id: "data", label: "Data" },
-    { id: "terminal", label: "Terminal" },
-    { id: "hud", label: "HUD" },
-    { id: "receipt", label: "Receipt" },
-    { id: "brutalist", label: "Brutal" },
-  ];
-  const STORAGE_KEY = "tracker-theme-v2";
-  const DEFAULT_BRAND_THEME = "onyx";
-
-  function find(themeId) {
-    return THEMES.find((theme) => theme.id === themeId);
-  }
+  const ENSIA = Object.freeze({ id: "ensia", label: "Ensia" });
 
   function current() {
-    return find(localStorage.getItem(STORAGE_KEY)) || THEMES[0];
+    return ENSIA;
   }
 
-  function setMode(themeId) {
-    const theme = find(themeId) || THEMES[0];
-    try {
-      localStorage.setItem(STORAGE_KEY, theme.id);
-    } catch (error) {
-      console.error("Persistance du thème impossible :", error);
-    }
-    return theme;
+  function setMode(_themeId) {
+    return ENSIA;
   }
 
   function cycle() {
-    const index = THEMES.findIndex((theme) => theme.id === current().id);
-    return setMode(THEMES[(index + 1) % THEMES.length].id);
+    return ENSIA;
   }
 
-  /** Applique le thème effectif pour une vue (résout le mode "brand"). */
-  function applyFor(view) {
-    const mode = current();
-    document.documentElement.dataset.theme = mode.id === "brand"
-      ? (view && view.brandTheme) || DEFAULT_BRAND_THEME
-      : mode.id;
+  /** Applique le thème (identique pour toutes les vues). */
+  function applyFor(_view) {
+    document.documentElement.dataset.theme = ENSIA.id;
   }
 
   return { current, setMode, cycle, applyFor };
 })();
 
-/* Applique le thème avant le premier rendu (évite le flash).
-   ?theme=<id> dans l'URL force un mode (test/preview). */
-(() => {
-  const requested = new URLSearchParams(location.search).get("theme");
-  if (requested) Theme.setMode(requested);
-  Theme.applyFor(null);
-})();
+/* Applique le thème avant le premier rendu (évite le flash). */
+Theme.applyFor(null);
 
 const Views = (() => {
   const registered = [];
@@ -119,7 +89,7 @@ function formatAge(hours) {
 
 /**
  * Pastille "maj HH:MM" pour l'en-tête d'une vue. Passe en état "non à jour"
- * (badge ambre) quand les données dépassent maxAgeHours — un indicateur
+ * (badge laiton) quand les données dépassent maxAgeHours : un indicateur
  * visible vaut mieux qu'un affichage muet de données périmées.
  */
 function updatedPill(isoTimestamp, maxAgeHours = 6) {
@@ -127,7 +97,7 @@ function updatedPill(isoTimestamp, maxAgeHours = 6) {
   const time = isoTimestamp
     ? new Date(isoTimestamp).toLocaleTimeString("fr-FR",
         { hour: "2-digit", minute: "2-digit" })
-    : "—";
+    : "--";
   const isStale = age !== null && age > maxAgeHours;
   const label = isStale ? `non à jour · ${formatAge(age)}` : `maj ${time}`;
   return `<div class="live-pill${isStale ? " is-stale" : ""}">
