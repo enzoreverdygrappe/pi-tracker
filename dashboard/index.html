@@ -16,10 +16,15 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <img class="brand-mark" src="assets/ensia-logo-inverse.svg" alt="ENSIA">
+        <img class="brand-mark logo-dark" src="assets/ensia-logo-inverse.svg" alt="ENSIA">
+        <img class="brand-mark logo-light" src="assets/ensia-logo.svg" alt="ENSIA">
         <span class="brand-sub">Tracker</span>
       </div>
       <div class="topbar-right">
+        <button id="theme-toggle" class="theme-toggle" type="button"
+          aria-label="Basculer entre thème nuit et thème papier" aria-pressed="false">
+          <span class="theme-toggle-knob"></span>
+        </button>
         <div class="clock">
           <span id="clock-time">--:--</span>
           <span id="clock-date">--</span>

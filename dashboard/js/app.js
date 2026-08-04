@@ -45,6 +45,27 @@
     });
   }
 
+  /**
+   * Interrupteur nuit / papier : bascule le thème, puis re-rend la vue active
+   * (les couleurs inline des heatmaps sont lues au rendu, pas en CSS pur).
+   */
+  function setupThemeToggle() {
+    const toggle = document.getElementById("theme-toggle");
+    if (!toggle) return;
+
+    const syncState = () => {
+      const isLight = Theme.current().id === "ensia-light";
+      toggle.setAttribute("aria-pressed", String(isLight));
+    };
+
+    toggle.addEventListener("pointerdown", () => {
+      Theme.cycle();
+      syncState();
+      if (activeView) activateView(activeView, { force: true });
+    });
+    syncState();
+  }
+
   function startClock() {
     const timeNode = document.getElementById("clock-time");
     const dateNode = document.getElementById("clock-date");
@@ -66,6 +87,7 @@
       return;
     }
     buildTabBar(views);
+    setupThemeToggle();
     startClock();
     /* ?view=<id> dans l'URL choisit la vue initiale (deep-link kiosque/test). */
     const requested = new URLSearchParams(location.search).get("view");

@@ -1,7 +1,10 @@
 /* ==========================================================================
-   Tracker : charte ENSIA v2 « Encre et laiton », déclinaison nuit.
-   Surface « salle des machines » : fond nuit légitime, texte papier voilé,
-   laiton clair pour les valeurs, filets laiton à 22 % pour les cartes.
+   Tracker : charte ENSIA v2 « Encre et laiton ».
+   Deux thèmes pilotés par data-theme sur <html> (API Theme, js/core.js) :
+   - "ensia" (défaut kiosque) : déclinaison nuit « salle des machines »,
+     texte papier voilé, laiton clair, filets laiton à 22 %.
+   - "ensia-light" : papier / encre, sections vergé, cartes blanches à filet
+     encre 12 %, laiton #9A7B33 (petits textes laiton #7A6226).
    Interdits v1 : violet, lime, dégradés, glows, pilules, radius > 2 px.
    Typo : EB Garamond (wordmark), Instrument Sans (UI), DM Mono (chiffres,
    règle du relevé). Fallbacks locaux si le kiosque est hors ligne.
@@ -9,6 +12,8 @@
    ========================================================================== */
 
 :root {
+  color-scheme: dark;
+
   /* Surfaces (nuit / encre) */
   --bg: #05070f;
   --surface: #0b1220;
@@ -22,8 +27,11 @@
   --bar-zero: rgba(243, 240, 233, 0.07);
   --tab-bg: rgba(5, 7, 15, 0.94);
 
-  /* Accents : laiton clair (valeurs, filets) + vert lampe éclairci */
+  /* Accents : laiton clair (valeurs, filets) + vert lampe éclairci.
+     --accent-text : laiton pour petits textes (identique sur nuit, foncé
+     en light pour tenir 4.5:1 sur papier). */
   --accent: #c9a75b;
+  --accent-text: #c9a75b;
   --accent-soft: rgba(201, 167, 91, 0.1);
   --accent-2: #7fb89a;
   --accent-2-soft: rgba(201, 167, 91, 0.16);
@@ -56,6 +64,10 @@
   --temp-warm: #c9a75b;
   --temp-cold: #7fb89a;
 
+  /* Voiles et ombres (nuit) */
+  --overlay: rgba(5, 7, 15, 0.72);
+  --tooltip-shadow: 0 12px 24px rgba(5, 7, 15, 0.5);
+
   /* Typo + géométrie : radius 2 px partout, jamais de pilule */
   --font-display: "EB Garamond", Georgia, "Times New Roman", serif;
   --font-ui: "Instrument Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -64,6 +76,66 @@
   --tab-height: 84px;
 
   font-size: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Thème « ensia-light » : papier / encre (charte v2, light first).
+   Cartes blanches à filet encre 12 %, vergé pour les fonds de champs,
+   laiton #9A7B33 en graphique, laiton texte #7A6226 en petits corps.
+   -------------------------------------------------------------------------- */
+
+:root[data-theme="ensia-light"] {
+  color-scheme: light;
+
+  /* Surfaces (papier / vergé / carte) */
+  --bg: #fbf9f5;
+  --surface: #ffffff;
+  --surface-raised: #f1ede2;
+  --border: rgba(11, 18, 32, 0.12);
+  --border-strong: rgba(154, 123, 51, 0.55);
+  --hairline: rgba(11, 18, 32, 0.08);
+  --leader: rgba(154, 123, 51, 0.45);
+  --grid-line: rgba(11, 18, 32, 0.07);
+  --track: rgba(11, 18, 32, 0.08);
+  --bar-zero: rgba(11, 18, 32, 0.06);
+  --tab-bg: rgba(251, 249, 245, 0.94);
+
+  /* Accents : laiton de plaque + vert lampe de banquier */
+  --accent: #9a7b33;
+  --accent-text: #7a6226;
+  --accent-soft: rgba(154, 123, 51, 0.1);
+  --accent-2: #1f4a38;
+  --accent-2-soft: rgba(154, 123, 51, 0.16);
+
+  /* Couleurs de données sur papier */
+  --data-accent: #9a7b33;
+  --data-active: #1f4a38;
+
+  /* Rampe séquentielle heatmap (laiton sur papier, faible -> fort) */
+  --heat-empty: rgba(11, 18, 32, 0.05);
+  --heat-1: #ede2c6;
+  --heat-2: #dcc58f;
+  --heat-3: #c9a75b;
+  --heat-4: #9a7b33;
+  --heat-5: #7a6226;
+
+  /* Encres (texte sur papier) */
+  --ink: #0b1220;
+  --ink-secondary: #3f4756;
+  --ink-muted: #6d7382;
+
+  /* Statuts : vert lampe, laiton, rouge cire */
+  --status-good: #1f4a38;
+  --status-warn: #9a7b33;
+  --status-bad: #8e2f26;
+
+  /* Températures : laiton texte (petits corps), vert lampe */
+  --temp-warm: #7a6226;
+  --temp-cold: #1f4a38;
+
+  /* Voiles et ombres (encre sur papier) */
+  --overlay: rgba(11, 18, 32, 0.45);
+  --tooltip-shadow: 0 12px 24px rgba(11, 18, 32, 0.18);
 }
 
 /* ==========================================================================
@@ -109,6 +181,11 @@ html, body {
 
 .brand-mark { display: block; height: 26px; width: auto; }
 
+/* Wordmark : version inverse (papier) sur nuit, version encre sur papier. */
+.brand-mark.logo-light { display: none; }
+:root[data-theme="ensia-light"] .brand-mark.logo-dark { display: none; }
+:root[data-theme="ensia-light"] .brand-mark.logo-light { display: block; }
+
 .brand-sub {
   font-size: 0.66rem;
   font-weight: 600;
@@ -121,12 +198,38 @@ html, body {
 
 .topbar-right { display: flex; align-items: center; gap: 16px; }
 
+/* Interrupteur de thème : rectangle 2 px, taquet carré laiton, sans lueur.
+   Nuit = taquet à gauche, papier = taquet à droite. */
+
+.theme-toggle {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.theme-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  transition: transform 120ms ease;
+}
+
+:root[data-theme="ensia-light"] .theme-toggle-knob { transform: translateX(22px); }
+
 .clock { display: flex; align-items: baseline; gap: 12px; font-family: var(--font-mono); }
 
 #clock-time {
   font-size: 1.25rem;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 #clock-date {
@@ -162,7 +265,7 @@ html, body {
   color: var(--ink);
 }
 
-.view-title em { color: var(--accent); font-style: normal; }
+.view-title em { color: var(--accent-text); font-style: normal; }
 .view-title .sep { color: var(--ink-muted); margin: 0 6px; }
 
 /* Logos de marque : masque alpha recoloré par currentColor. */
@@ -209,7 +312,7 @@ html, body {
 }
 
 /* Données périmées : carré laiton fixe (pas de pulsation « live »). */
-.live-pill.is-stale { color: var(--status-warn); }
+.live-pill.is-stale { color: var(--accent-text); }
 
 .live-pill.is-stale .live-dot {
   background: var(--status-warn);
@@ -236,7 +339,7 @@ html, body {
 .section-num {
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .section-name {
@@ -476,7 +579,7 @@ html, body {
   font-size: 0.78rem;
 }
 
-.ledger .row-num { color: var(--accent); font-size: 0.68rem; }
+.ledger .row-num { color: var(--accent-text); font-size: 0.68rem; }
 
 .ledger .row-date { color: var(--ink-secondary); white-space: nowrap; }
 
@@ -495,7 +598,7 @@ html, body {
   min-width: 24px;
 }
 
-.ledger .row-value { color: var(--accent); font-weight: 500; white-space: nowrap; }
+.ledger .row-value { color: var(--accent-text); font-weight: 500; white-space: nowrap; }
 
 /* Agenda : heure en évidence à gauche, titre à droite */
 
@@ -516,7 +619,7 @@ html, body {
   font-family: var(--font-mono);
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-text);
   white-space: nowrap;
 }
 
@@ -669,7 +772,7 @@ html, body {
   background: var(--accent-soft);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--font-ui);
   font-size: 0.82rem;
   font-weight: 600;
@@ -687,7 +790,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 7, 15, 0.72);
+  background: var(--overlay);
 }
 
 .numpad {
@@ -737,7 +840,7 @@ html, body {
 .numpad-actions .numpad-ok {
   background: var(--accent-soft);
   border-color: var(--border-strong);
-  color: var(--accent);
+  color: var(--accent-text);
   font-family: var(--font-ui);
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -824,12 +927,12 @@ html, body {
   color: var(--ink);
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 12px));
-  box-shadow: 0 12px 24px rgba(5, 7, 15, 0.5);
+  box-shadow: var(--tooltip-shadow);
   white-space: nowrap;
 }
 
 .chart-tooltip .tip-label { color: var(--ink-secondary); margin-right: 8px; }
-.chart-tooltip .tip-value { color: var(--accent); font-weight: 500; }
+.chart-tooltip .tip-value { color: var(--accent-text); font-weight: 500; }
 
 /* --------------------------------------------------------------------------
    Barre d'onglets tactile (bas d'écran)
@@ -871,5 +974,5 @@ html, body {
 .tab-button.is-active {
   background: var(--accent-soft);
   border-color: var(--border-strong);
-  color: var(--accent);
+  color: var(--accent-text);
 }

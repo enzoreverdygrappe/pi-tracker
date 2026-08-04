@@ -10,6 +10,10 @@
 set -uo pipefail
 
 DASHBOARD_URL="http://127.0.0.1:8321"
+# Défaut kiosque : thème nuit. Sans ce paramètre, Chromium (qui annonce
+# prefers-color-scheme: light par défaut) démarrerait en thème papier.
+# La bascule tactile de l'UI (persistée en localStorage) prime sur ce défaut.
+KIOSK_URL="${DASHBOARD_URL}/?theme=ensia"
 MAX_WAIT_SECONDS=60
 CHROME_RESTART_DELAY=3
 PROFILE_DIR="${HOME}/.config/pi-tracker-kiosk"
@@ -78,7 +82,7 @@ while true; do
         --disable-pinch \
         --overscroll-history-navigation=0 \
         --check-for-update-interval=31536000 \
-        "$DASHBOARD_URL" || true
+        "$KIOSK_URL" || true
 
     log "Chromium s'est arrêté — redémarrage dans ${CHROME_RESTART_DELAY}s."
     sleep "$CHROME_RESTART_DELAY"

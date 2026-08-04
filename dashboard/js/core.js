@@ -5,28 +5,88 @@
 "use strict";
 
 /**
- * Thème unique : charte ENSIA v2 « Encre et laiton », déclinaison nuit
- * (variables CSS sur :root dans style.css). L'API Theme est conservée pour
- * les appelants (app.js) mais ne fait plus que poser data-theme="ensia".
+ * Thèmes : charte ENSIA v2 « Encre et laiton », deux déclinaisons
+ * (variables CSS via data-theme sur <html>, voir style.css) :
+ * - "ensia" : nuit, défaut kiosque ;
+ * - "ensia-light" : papier / encre.
+ * Choix, par priorité : localStorage (choix utilisateur) > ?theme=<id> dans
+ * l'URL (défaut kiosque / test, non persisté) > prefers-color-scheme: light >
+ * nuit en dernier recours. Le choix stocké prime sur l'URL pour que la bascule
+ * tactile survive aux reboots du kiosque (qui repasse ?theme=ensia).
  */
 const Theme = (() => {
-  const ENSIA = Object.freeze({ id: "ensia", label: "Ensia" });
+  const DARK_ID = "ensia";
+  const LIGHT_ID = "ensia-light";
+  const THEMES = Object.freeze({
+    [DARK_ID]: Object.freeze({ id: DARK_ID, label: "Ensia nuit" }),
+    [LIGHT_ID]: Object.freeze({ id: LIGHT_ID, label: "Ensia papier" }),
+  });
+  const STORAGE_KEY = "tracker-theme";
+
+  function readStored() {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch (error) {
+      return null; /* kiosque sans stockage : on retombe sur le défaut */
+    }
+  }
+
+  function persist(themeId) {
+    try {
+      localStorage.setItem(STORAGE_KEY, themeId);
+    } catch (error) {
+      /* Stockage indisponible : le choix ne survivra pas au rechargement. */
+    }
+  }
+
+  function prefersLight() {
+    try {
+      return window.matchMedia("(prefers-color-scheme: light)").matches;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function initialId() {
+    const stored = readStored();
+    if (stored && THEMES[stored]) return stored;
+    try {
+      const requested = new URLSearchParams(window.location.search).get("theme");
+      if (requested && THEMES[requested]) return requested;
+    } catch (error) {
+      /* URL illisible : on continue avec les autres sources. */
+    }
+    if (prefersLight()) return LIGHT_ID;
+    return DARK_ID;
+  }
+
+  let activeId = initialId();
+
+  function apply() {
+    document.documentElement.dataset.theme = activeId;
+  }
 
   function current() {
-    return ENSIA;
+    return THEMES[activeId];
   }
 
-  function setMode(_themeId) {
-    return ENSIA;
+  /** Active un thème par id, le persiste et l'applique ; ignore un id inconnu. */
+  function setMode(themeId) {
+    if (!THEMES[themeId]) return THEMES[activeId];
+    activeId = themeId;
+    persist(themeId);
+    apply();
+    return THEMES[activeId];
   }
 
+  /** Bascule nuit <-> papier. */
   function cycle() {
-    return ENSIA;
+    return setMode(activeId === DARK_ID ? LIGHT_ID : DARK_ID);
   }
 
-  /** Applique le thème (identique pour toutes les vues). */
+  /** Applique le thème courant (identique pour toutes les vues). */
   function applyFor(_view) {
-    document.documentElement.dataset.theme = ENSIA.id;
+    apply();
   }
 
   return { current, setMode, cycle, applyFor };
