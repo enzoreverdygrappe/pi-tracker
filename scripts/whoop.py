@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import DATA_DIR, PROJECT_ROOT, load_env
 from scripts.common import read_document, utc_now_iso, write_document_atomic
+from scripts.course_cloud import cloud_config, fetch_access_token, push_tokens
 from scripts.oauth_local import capture_auth_code
 from scripts.source_status import record_status
 
@@ -116,7 +117,13 @@ def _load_tokens() -> dict[str, Any]:
 
 
 def get_access_token() -> str:
-    """Access token valide ; rafraîchi (et re-sauvegardé) si expiré."""
+    """Access token valide ; rafraîchi (et re-sauvegardé) si expiré.
+
+    Si l'app Course garde les jetons (COURSE_API_URL), c'est elle qui le fournit.
+    """
+    cloud = cloud_config()
+    if cloud:
+        return fetch_access_token("whoop", cloud)["access_token"]
     tokens = _load_tokens()
     if time.time() < tokens.get("expires_at", 0) - TOKEN_EXPIRY_MARGIN_SECONDS:
         return tokens["access_token"]
@@ -153,6 +160,12 @@ def run_auth_flow() -> None:
         "client_secret": config["client_secret"],
         "redirect_uri": config["redirect_uri"],
     })
+    cloud = cloud_config()
+    if cloud:
+        push_tokens("whoop", tokens, cloud)
+        TOKENS_FILE.unlink(missing_ok=True)  # un seul détenteur du jeton de rafraîchissement
+        print("Connecté. Jetons confiés à l'app Course (Vercel).")
+        return
     _save_tokens(tokens)
     print(f"Connecté. Tokens enregistrés dans {TOKENS_FILE.name} (gitignoré).")
 

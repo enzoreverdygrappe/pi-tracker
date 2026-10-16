@@ -139,6 +139,13 @@ En ligne de commande : `python3 scripts/run_plan.py plan --minutes 45 --pace 6:0
 (ou `--km 15 --kind sortie_longue`). Les plans vont dans `data/run_plan.json`
 (gitignoré : il contient l'adresse de départ).
 
+**App mobile « Course »** (`~/ma-course`, https://ma-course-six.vercel.app) : version
+téléphone de cet onglet, qui se met à jour seule sur Vercel (Garmin + WHOOP), sans le Mac.
+Les jetons de rafraîchissement Garmin et WHOOP changent à chaque utilisation et ne peuvent
+vivre qu'à un endroit : c'est l'app qui les garde. Avec `COURSE_API_URL` et
+`COURSE_SYNC_SECRET` dans `.env`, `whoop.py` et `garmin_workouts.py` lui demandent un jeton
+d'accès (`scripts/course_cloud.py`), et leur commande `auth` lui confie les nouveaux jetons.
+
 ## Installation sur le Raspberry Pi
 
 ### Installation automatique (recommandé)

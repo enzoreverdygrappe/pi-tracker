@@ -10,11 +10,14 @@ Usage :
   python3 scripts/garmin_workouts.py auth      # une fois : email, mot de passe, code MFA
   python3 scripts/garmin_workouts.py collect   # cron : séances des 7 prochains jours
 Jetons dans .garmin_tokens/ (gitignoré) ; le mot de passe n'est jamais stocké.
+Si l'app Course garde les jetons (COURSE_API_URL, voir course_cloud.py), `collect` lui
+demande un jeton d'accès et `auth` lui confie les nouveaux jetons.
 """
 from __future__ import annotations
 
 import argparse
 import getpass
+import json
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -25,10 +28,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import DATA_DIR, PROJECT_ROOT
 from scripts.common import read_document, utc_now_iso, write_document_atomic
 from scripts.source_status import record_status
+from scripts.course_cloud import cloud_config, fetch_access_token, push_tokens
 
 CATEGORY = "kotcha_workouts"
 DATA_FILE = DATA_DIR / f"{CATEGORY}.json"
 TOKEN_DIR = PROJECT_ROOT / ".garmin_tokens"
+TOKEN_FILE = TOKEN_DIR / "garmin_tokens.json"
 LOOKAHEAD_DAYS = 7
 DEFAULT_EASY_PACE_S = 360     # allure retenue pour une étape sans cible
 OPEN_STEP_S = 600             # étape « jusqu'au Lap » sans durée : comptée 10 min…
@@ -121,9 +126,28 @@ def summarize_workout(workout: dict[str, Any], fallback_pace_s: float = DEFAULT_
     }
 
 
+def _cloud_client(cloud: tuple[str, str]):
+    """Client avec un jeton d'accès prêté par l'app Course, sans jeton de rafraîchissement."""
+    from garminconnect import Garmin
+
+    token = fetch_access_token("garmin", cloud)
+    client = Garmin()
+    client.login(tokenstore=json.dumps({"di_token": token["access_token"], "di_client_id": token.get("client_id")}))
+    return client
+
+
+def _hand_tokens_to_cloud(cloud: tuple[str, str]) -> None:
+    """Après un `auth` : l'app devient le seul détenteur des jetons."""
+    push_tokens("garmin", json.loads(TOKEN_FILE.read_text(encoding="utf-8")), cloud)
+    TOKEN_FILE.unlink()
+
+
 def _client(with_credentials: bool = False):
     from garminconnect import Garmin  # import local : dépendance lourde, utile ici seulement
 
+    cloud = cloud_config()
+    if cloud and not with_credentials:
+        return _cloud_client(cloud)
     if with_credentials:
         email = input("Email Garmin Connect : ").strip()
         password = getpass.getpass("Mot de passe (non stocké) : ")
@@ -132,6 +156,8 @@ def _client(with_credentials: bool = False):
         client = Garmin()
     TOKEN_DIR.mkdir(mode=0o700, exist_ok=True)
     client.login(tokenstore=str(TOKEN_DIR))
+    if cloud and with_credentials:
+        _hand_tokens_to_cloud(cloud)
     return client
 
 
@@ -182,7 +208,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "auth":
             _client(with_credentials=True)
-            print(f"Connecté. Jetons enregistrés dans {TOKEN_DIR}.")
+            where = "confiés à l'app Course (Vercel)" if cloud_config() else f"enregistrés dans {TOKEN_DIR}"
+            print(f"Connecté. Jetons {where}.")
             return 0
         workouts = collect()
         record_status(CATEGORY)
