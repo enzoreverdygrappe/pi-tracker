@@ -1,4 +1,6 @@
 flask>=3.0,<4
+segno>=1.6,<2   # QR code de l'onglet Course
+garminconnect>=0.3.17,<0.4   # séances Kotcha via Garmin Connect (non officiel)
 
 # Dev uniquement
 pytest>=8.0

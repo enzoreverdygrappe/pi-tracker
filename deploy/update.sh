@@ -40,7 +40,8 @@ else
     exit 1
 fi
 
+info "Relance du kiosque (cache vidé, nouveau frontend)"
+"$PROJECT_ROOT/deploy/kiosk-restart.sh" || err "Relance du kiosque impossible — voir logs/kiosk.log."
+
 echo
 ok "Mise à jour terminée."
-echo "   Le kiosque rechargera au prochain cycle Chromium."
-echo "   Pour recharger tout de suite :  pkill chromium   (le watchdog relance)."

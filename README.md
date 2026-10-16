@@ -1,7 +1,8 @@
 # pi-tracker
 
 Dashboard personnel de tracking, pensé pour tourner en kiosque plein écran sur un
-Raspberry Pi 4 (2 Go RAM) avec écran tactile HDMI 10.1" (1024x600). Données stockées
+Raspberry Pi 4 (2 Go RAM) avec écran tactile HDMI 10.1" (pensé pour 1280x800, s'adapte
+jusqu'à 1024x600). Données stockées
 en JSON local, versionnées sur GitHub, affichage 100 % offline.
 
 ## Architecture
@@ -19,18 +20,15 @@ tests/               Tests pytest
 
 **Ajouter une nouvelle métrique** :
 1. `scripts/<nom>.py` qui écrit `data/<nom>.json` (réutiliser `scripts/common.py`)
-2. `dashboard/js/views/<nom>.js` qui appelle `Views.register({...})`
-3. Référencer le script dans `index.html` avant `app.js`
+2. Dans `dashboard/app.js` : ajouter `<nom>` à `MAX_AGE_H` (il est alors pollé),
+   écrire sa fonction de rendu et l'inscrire dans `RENDERERS`
+3. Ajouter sa carte (`<article class="tile card" id="...">`) dans `index.html`
 
-Rien d'autre à toucher : l'API et la barre d'onglets s'adaptent automatiquement.
-
-**Design** : charte ENSIA v2 « Encre et laiton », déclinaison nuit
-(fond #05070F, encre #0B1220, texte #F3F0E9, laiton clair #C9A75B, bordures
-laiton à 22 %, radius 2 px, aucun dégradé ni glow). Typo : EB Garamond
-(wordmark), Instrument Sans (UI), DM Mono pour tous les chiffres (règle du
-relevé) ; Google Fonts chargées si le réseau est là, fallbacks locaux sinon.
-Thème unique : toutes les variables vivent dans `dashboard/css/style.css`
-(les anciens skins v1 Onyx/Terminal/HUD... sont retirés).
+**Frontend** (`dashboard/`, détails dans [dashboard/README.md](dashboard/README.md)) :
+widgets façon iOS / visionOS en grille bento, 3 pages en swipe (Accueil, Santé,
+Claude API), thème auto clair/sombre selon l'heure, veille après 2 min.
+`index.html` + `styles.css` + `app.js`, plus `js/ui.js` (graphiques SVG,
+compteurs) et `js/weather-icons.js`. Police Inter servie en local.
 
 ## Démarrage rapide (dev, Mac/Linux)
 
@@ -47,7 +45,7 @@ python3 scripts/claude_stats.py collect
 # Nécessite Claude Code connecté sur la machine (token OAuth local).
 python3 scripts/claude_limits.py collect
 
-# Objectif financier (vue Goal — GOAL_AMOUNT/GOAL_DATE dans .env)
+# Objectif financier (API /api/goal/* — plus affiché dans le dashboard v3)
 python3 scripts/goal.py add --amount 150 --note "Mission client"
 python3 scripts/goal.py stats
 
@@ -57,6 +55,10 @@ python3 server.py
 ```
 
 Tests : `pytest tests/ -v`
+
+Tests de l'interface (Playwright, lancent leur propre serveur sur le port 8399) :
+`npm install --no-save playwright && npx playwright install chromium` une fois,
+puis `node --test tests/e2e/*.test.mjs`.
 
 ## WHOOP
 
@@ -99,12 +101,43 @@ copier `.whoop_tokens.json` depuis le Mac (il n'est pas synchronisé par git).
 Aucune clé API. La localisation vient de `.env` :
 
 ```bash
-WEATHER_LAT=45.7578   # Lyon par défaut
-WEATHER_LON=4.8320
-WEATHER_CITY=Lyon     # ex. Champagnole : 46.7456 / 5.9086
+WEATHER_LAT=48.8566   # Paris par défaut
+WEATHER_LON=2.3522
+WEATHER_CITY=Paris    # ex. Lyon : 45.7578 / 4.8320
 ```
 
 Collecter : `python3 scripts/weather_sync.py collect` (cron toutes les 30 min).
+Open-Meteo répond parfois 503 ou trop lentement : la requête est retentée 2 fois
+(après 5 s puis 20 s) avant d'abandonner.
+
+## Course (séance Kotcha → boucle Google Maps)
+
+Onglet « Course » du dashboard (détails dans `dashboard/README.md`). Départ dans `.env` :
+
+```bash
+RUN_HOME_LAT=48.8566
+RUN_HOME_LON=2.3522
+RUN_HOME_LABEL=Maison
+```
+
+**Séance Kotcha automatique (via Garmin Connect, sans montre)** : Kotcha n'a pas
+d'API, mais il envoie ses séances dans le calendrier Garmin Connect.
+1. Créer un compte gratuit sur connect.garmin.com (aucun appareil nécessaire).
+2. Dans Kotcha : **Moi → Connected Apps & Devices → Sync with Garmin Connect**,
+   en cochant les permissions **Activities** et **Training**.
+3. Vérifier que les séances apparaissent dans le calendrier Garmin Connect.
+4. Une fois : `python3 scripts/garmin_workouts.py auth` (email, mot de passe,
+   code MFA ; seuls des jetons sont gardés dans `.garmin_tokens/`, gitignoré).
+5. Collecte : `python3 scripts/garmin_workouts.py collect` (cron horaire). La
+   séance du jour pré-remplit l'onglet Course et sa boucle est calculée
+   d'avance. Le fractionné est seulement affiché (il se fait au stade).
+
+Bibliothèque non officielle (`garminconnect`) : si Garmin change son site,
+la collecte peut casser ; la saisie manuelle reste toujours disponible.
+
+En ligne de commande : `python3 scripts/run_plan.py plan --minutes 45 --pace 6:00`
+(ou `--km 15 --kind sortie_longue`). Les plans vont dans `data/run_plan.json`
+(gitignoré : il contient l'adresse de départ).
 
 ## Installation sur le Raspberry Pi
 
@@ -149,7 +182,19 @@ Après reboot : dashboard sur `http://127.0.0.1:8321`, plein écran automatique.
   (`HIDE_DESKTOP=1`, valeur par défaut).
 - **Watchdog Chromium** : si Chromium plante, il est relancé automatiquement
   (boucle) ; les drapeaux de crash sont effacés pour ne jamais afficher
-  « Restaurer les pages ».
+  « Restaurer les pages ». Cache HTTP vidé à chaque lancement.
+- **GPU** : rastérisation GPU forcée (`--ignore-gpu-blocklist`,
+  `--enable-gpu-rasterization`), 2 process de rendu max pour tenir en 2 Go.
+  `KIOSK_LITE=1` force le mode sans flou ; `CHROMIUM_EXTRA_FLAGS` ajoute des
+  drapeaux sans éditer le script.
+
+**Relancer le kiosque** (après une mise à jour, ou s'il fige), y compris en SSH :
+
+```bash
+./deploy/kiosk-restart.sh          # ferme Chromium, vide le cache, le watchdog relance
+./deploy/kiosk-restart.sh --full   # relance aussi kiosk.sh (après l'avoir modifié)
+./deploy/kiosk-restart.sh --lite   # idem, en forçant le mode sans flou
+```
 
 Le **serveur** est protégé côté systemd (`Restart=always`, `RestartSec=5`, garde
 anti-crash-loop). Pour sortir du kiosque : brancher un clavier et `Alt+F4`, ou
@@ -161,8 +206,8 @@ anti-crash-loop). Pour sortir du kiosque : brancher un clavier et `Alt+F4`, ou
 cd ~/pi-tracker && ./deploy/update.sh
 ```
 
-`deploy/update.sh` fait `git pull --ff-only`, réinstalle les dépendances Python
-et redémarre `tracker.service`, avec un message clair et un guide de résolution
+`deploy/update.sh` fait `git pull --ff-only`, réinstalle les dépendances Python,
+redémarre `tracker.service` puis relance le kiosque (`kiosk-restart.sh`), avec un message clair et un guide de résolution
 si le `git pull` échoue (divergence data/ locale non poussée).
 
 ### Rotation des logs

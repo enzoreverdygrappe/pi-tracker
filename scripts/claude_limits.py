@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import DATA_DIR
 from scripts.common import append_entry, read_document, utc_now_iso, write_document_atomic
+from scripts.source_status import record_status
 
 CATEGORY = "claude_limits"
 DATA_FILE = DATA_DIR / f"{CATEGORY}.json"
@@ -217,11 +218,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "collect":
             print(format_snapshot(collect()))
+            record_status(CATEGORY)
         elif args.command == "show":
             entries = read_document(DATA_FILE, CATEGORY).get("entries", [])
             print(format_snapshot(entries[-1]) if entries
                   else "Aucun snapshot — lancer 'collect' d'abord.")
     except (RuntimeError, ValueError, OSError) as error:
+        if args.command == "collect":
+            record_status(CATEGORY, str(error))
         print(f"Erreur : {error}", file=sys.stderr)
         return 1
     return 0

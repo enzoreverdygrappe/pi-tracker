@@ -14,6 +14,7 @@ from scripts.common import read_document
 from scripts.goal import add_entry as goal_add_entry
 from scripts.goal import compute_stats as goal_compute_stats
 from scripts.goal import get_goal_config
+from scripts.run_plan import build_plan as run_build_plan
 
 app = Flask(__name__, static_folder=str(DASHBOARD_DIR), static_url_path="")
 
@@ -97,6 +98,24 @@ def post_goal_entry():
         app.logger.error("Écriture goal.json impossible : %s", error)
         return api_response(error="Enregistrement impossible", status=500)
     return api_response(data=build_goal_summary(document))
+
+
+@app.post("/api/run/plan")
+def post_run_plan():
+    """Onglet Course : séance saisie au tactile -> analyse + boucle Google Maps."""
+    payload = request.get_json(silent=True) or {}
+    try:
+        plan = run_build_plan(payload)
+    except ValueError as error:
+        return api_response(error=str(error), status=400)
+    except RuntimeError as error:
+        app.logger.error("Boucle de course impossible : %s", error)
+        return api_response(error="Itinéraire indisponible (réseau ?) : réessaie dans un instant",
+                            status=502)
+    except OSError as error:
+        app.logger.error("Écriture run_plan.json impossible : %s", error)
+        return api_response(error="Enregistrement impossible", status=500)
+    return api_response(data=plan)
 
 
 @app.errorhandler(404)

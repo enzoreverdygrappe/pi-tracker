@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.claude_stats import (
     cost_usd,
+    local_day,
     merge_daily_entries,
     parse_usage_lines,
     prettify_project,
@@ -29,6 +30,18 @@ def make_line(day="2026-07-18", model="claude-fable-5", output=1000,
     }
 
 
+class TestLocalDay:
+    def test_converts_utc_timestamp_to_local_date(self):
+        # 23:30 UTC le 17 : le 18 en heure de Paris (UTC+2 l'été).
+        from datetime import datetime, timedelta, timezone
+        paris = timezone(timedelta(hours=2))
+        assert local_day("2026-07-17T23:30:00.000Z", paris) == "2026-07-18"
+        assert local_day("2026-07-17T21:30:00.000Z", paris) == "2026-07-17"
+
+    def test_unparseable_timestamp_falls_back_to_prefix(self):
+        assert local_day("2026-07-17-garbage") == "2026-07-17"
+
+
 class TestParseUsageLines:
     def test_aggregates_per_day_and_today_buckets(self):
         # Arrange
@@ -46,6 +59,27 @@ class TestParseUsageLines:
         assert parsed["days"]["2026-07-17"]["output_tokens"] == 500
         assert parsed["today_projects"] == {"-Users-enzor-pi-tracker": 1_000_000}
         assert parsed["today_models"]["claude-fable-5"]["output_tokens"] == 1_000_000
+
+    def test_hourly_buckets_since_cutoff(self):
+        # Arrange
+        early = make_line(day="2026-07-18", output=1_000_000, input_tokens=0)
+        late = {**make_line(day="2026-07-18", output=500),
+                "timestamp": "2026-07-18T14:59:59.000Z"}
+        lines = {"p": [early, late, make_line(day="2026-07-16")]}
+
+        # Act
+        parsed = parse_usage_lines(lines, "2026-07-01", "2026-07-18",
+                                   hourly_since="2026-07-17")
+
+        # Assert
+        assert set(parsed["hourly"]) == {"2026-07-18T10", "2026-07-18T14"}
+        assert parsed["hourly"]["2026-07-18T10"] == {"messages": 1, "cost_usd": 50.0}
+        assert parsed["hourly"]["2026-07-18T14"]["messages"] == 1
+
+    def test_hourly_defaults_to_today_only(self):
+        lines = {"p": [make_line(day="2026-07-17"), make_line(day="2026-07-18")]}
+        parsed = parse_usage_lines(lines, "2026-07-01", "2026-07-18")
+        assert list(parsed["hourly"]) == ["2026-07-18T10"]
 
     def test_skips_non_assistant_and_synthetic(self):
         lines = {"p": [

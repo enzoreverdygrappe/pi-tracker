@@ -26,5 +26,9 @@
 # Nécessite l'auth faite une fois (scripts/whoop.py auth) sur cette machine.
 0 */2 * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/whoop.py collect >> logs/collect.log 2>&1
 
+# Séances Kotcha via Garmin Connect toutes les heures, de 5 h à 22 h ; prépare la
+# boucle du jour (onglet Course). Nécessite 'scripts/garmin_workouts.py auth' une fois.
+0 5-22 * * * cd /home/pi/pi-tracker && /usr/bin/python3 scripts/garmin_workouts.py collect >> logs/collect.log 2>&1
+
 # Rotation des logs : gérée par logrotate (deploy/pi-tracker.logrotate,
 # installé par deploy/install.sh) + garde-fou dans sync.sh. Rien à ajouter ici.

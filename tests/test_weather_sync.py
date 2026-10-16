@@ -73,3 +73,53 @@ class TestBuildSnapshot:
     def test_rejects_payload_without_current(self):
         with pytest.raises(ValueError):
             build_snapshot({"hourly": {}}, "Lyon", TIMESTAMP)
+
+
+class TestFetchRetry:
+    """Open-Meteo renvoie parfois 503 / délai dépassé : on retente avant d'échouer."""
+
+    LOCATION = {"lat": "48.8", "lon": "2.3", "city": "Paris"}
+
+    @staticmethod
+    def opener(outcomes):
+        calls = []
+
+        def fake_urlopen(request, timeout):
+            calls.append(request)
+            outcome = outcomes[len(calls) - 1]
+            if isinstance(outcome, Exception):
+                raise outcome
+            import io
+            return io.BytesIO(outcome)
+
+        return fake_urlopen, calls
+
+    def test_retries_after_503_then_succeeds(self):
+        from urllib.error import HTTPError
+        from scripts.weather_sync import fetch_forecast
+        error = HTTPError("u", 503, "busy", {}, None)
+        fake, calls = self.opener([error, b'{"ok": true}'])
+        assert fetch_forecast(self.LOCATION, opener=fake, sleep=lambda _s: None) == {"ok": True}
+        assert len(calls) == 2
+
+    def test_gives_up_after_three_timeouts(self):
+        from scripts.weather_sync import fetch_forecast
+        fake, calls = self.opener([TimeoutError("timed out")] * 3)
+        with pytest.raises(RuntimeError, match="échouée"):
+            fetch_forecast(self.LOCATION, opener=fake, sleep=lambda _s: None)
+        assert len(calls) == 3
+
+    def test_rate_limit_is_retried(self):
+        from urllib.error import HTTPError
+        from scripts.weather_sync import fetch_forecast
+        fake, calls = self.opener([HTTPError("u", 429, "slow down", {}, None), b"{}"])
+        assert fetch_forecast(self.LOCATION, opener=fake, sleep=lambda _s: None) == {}
+        assert len(calls) == 2
+
+    def test_client_error_is_not_retried(self):
+        from urllib.error import HTTPError
+        from scripts.weather_sync import fetch_forecast
+        fake, calls = self.opener([HTTPError("u", 400, "bad", {}, None)])
+        with pytest.raises(RuntimeError, match="400"):
+            fetch_forecast(self.LOCATION, opener=fake, sleep=lambda _s: None)
+        assert len(calls) == 1

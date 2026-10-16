@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import DATA_DIR, PROJECT_ROOT, load_env
 from scripts.common import read_document, utc_now_iso, write_document_atomic
 from scripts.oauth_local import capture_auth_code
+from scripts.source_status import record_status
 
 CATEGORY = "calendar"
 DATA_FILE = DATA_DIR / f"{CATEGORY}.json"
@@ -243,9 +244,12 @@ def main(argv: list[str] | None = None) -> int:
             run_auth_flow()
         elif args.command == "collect":
             print(f"{collect()} événement(s) sur {LOOKAHEAD_DAYS} jours.")
+            record_status(CATEGORY)
         elif args.command == "show":
             print(format_events(read_document(DATA_FILE, CATEGORY).get("entries", [])))
     except (RuntimeError, ValueError, OSError) as error:
+        if args.command == "collect":
+            record_status(CATEGORY, str(error))
         print(f"Erreur : {error}", file=sys.stderr)
         return 1
     return 0

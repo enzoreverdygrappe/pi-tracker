@@ -16,7 +16,7 @@ import glob
 import json
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, tzinfo
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import DATA_DIR
 from scripts.common import read_document, utc_now_iso, write_document_atomic
+from scripts.source_status import record_status
 
 CATEGORY = "claude_stats"
 DATA_FILE = DATA_DIR / f"{CATEGORY}.json"
@@ -81,16 +82,36 @@ def prettify_project(dir_name: str) -> str:
     return dir_name.lstrip("-")
 
 
+def local_day(timestamp: str, tz: tzinfo | None = None) -> str:
+    """Date locale (YYYY-MM-DD) d'un timestamp ISO UTC ; tz=None -> fuseau système.
+
+    Le dashboard raisonne en jours locaux : l'usage de minuit à 2 h (Paris) doit
+    compter pour le jour même, pas la veille UTC.
+    """
+    try:
+        moment = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return timestamp[:10]
+    if moment.tzinfo is None:
+        return moment.date().isoformat()
+    return moment.astimezone(tz).date().isoformat()
+
+
 def parse_usage_lines(
     lines_by_project: dict[str, list[dict[str, Any]]],
     since_prefix: str,
     today_prefix: str,
+    hourly_since: str | None = None,
 ) -> dict[str, Any]:
     """Agrège les entrées "assistant" par jour (fonction pure).
 
-    Retourne {"days": {date: {...}}, "today_models": {...}, "today_projects": {...}}.
+    Retourne {"days": {date: {...}}, "today_models": {...}, "today_projects": {...},
+    "hourly": {"YYYY-MM-DDTHH" (UTC): {"messages", "cost_usd"}}}. Les heures sont
+    comptées à partir du jour hourly_since (défaut : today_prefix).
     """
+    hourly_cutoff = hourly_since or today_prefix
     days: dict[str, dict[str, Any]] = {}
+    hourly: dict[str, dict[str, Any]] = {}
     today_models: dict[str, dict[str, Any]] = {}
     today_projects: dict[str, int] = {}
 
@@ -99,7 +120,7 @@ def parse_usage_lines(
             if not isinstance(entry, dict) or entry.get("type") != "assistant":
                 continue
             timestamp = str(entry.get("timestamp") or "")
-            day_key = timestamp[:10]
+            day_key = local_day(timestamp) if len(timestamp) >= 10 else ""
             if len(day_key) < 10 or day_key < since_prefix:
                 continue
             message = entry.get("message")
@@ -129,6 +150,11 @@ def parse_usage_lines(
             day["cost_usd"] += cost_usd(model, usage)
             day["cache_saved_usd"] += cache_saved_usd(model, usage["cache_read"])
 
+            if day_key >= hourly_cutoff and len(timestamp) >= 13:
+                hour = hourly.setdefault(timestamp[:13], {"messages": 0, "cost_usd": 0.0})
+                hour["messages"] += 1
+                hour["cost_usd"] += cost_usd(model, usage)
+
             if day_key == today_prefix:
                 bucket = today_models.setdefault(model, {"output_tokens": 0, "cost_usd": 0.0})
                 bucket["output_tokens"] += usage["output"]
@@ -140,8 +166,11 @@ def parse_usage_lines(
         day["cache_saved_usd"] = round(day["cache_saved_usd"], 2)
     for bucket in today_models.values():
         bucket["cost_usd"] = round(bucket["cost_usd"], 2)
+    for hour in hourly.values():
+        hour["cost_usd"] = round(hour["cost_usd"], 2)
 
-    return {"days": days, "today_models": today_models, "today_projects": today_projects}
+    return {"days": days, "today_models": today_models,
+            "today_projects": today_projects, "hourly": hourly}
 
 
 def read_project_lines(claude_dir: Path) -> dict[str, list[dict[str, Any]]]:
@@ -186,6 +215,8 @@ def collect(days: int = DEFAULT_DAYS, data_file: Path = DATA_FILE) -> int:
         read_project_lines(CLAUDE_DIR),
         since_prefix=(today - timedelta(days=days)).isoformat(),
         today_prefix=today.isoformat(),
+        # Veille incluse : le dashboard affiche les 24 dernières heures glissantes.
+        hourly_since=(today - timedelta(days=1)).isoformat(),
     )
     fresh = [parsed["days"][key] for key in sorted(parsed["days"])]
     top_projects = sorted(
@@ -200,6 +231,9 @@ def collect(days: int = DEFAULT_DAYS, data_file: Path = DATA_FILE) -> int:
         "today_projects": [
             {"name": prettify_project(name), "output_tokens": tokens}
             for name, tokens in top_projects],
+        "hourly": [
+            {"hour": f"{key}:00:00Z", **parsed["hourly"][key]}
+            for key in sorted(parsed["hourly"])],
     }
     write_document_atomic(data_file, updated)
     return len(fresh)
@@ -230,9 +264,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "collect":
             count = collect(days=max(1, min(args.days, 120)))
             print(f"{count} jour(s) agrégés.")
+            record_status(CATEGORY)
         elif args.command == "show":
             print(format_today(read_document(DATA_FILE, CATEGORY)))
     except (RuntimeError, ValueError, OSError) as error:
+        if args.command == "collect":
+            record_status(CATEGORY, str(error))
         print(f"Erreur : {error}", file=sys.stderr)
         return 1
     return 0

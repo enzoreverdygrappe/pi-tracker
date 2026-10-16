@@ -10,10 +10,14 @@
 set -uo pipefail
 
 DASHBOARD_URL="http://127.0.0.1:8321"
-# Défaut kiosque : thème nuit. Sans ce paramètre, Chromium (qui annonce
-# prefers-color-scheme: light par défaut) démarrerait en thème papier.
-# La bascule tactile de l'UI (persistée en localStorage) prime sur ce défaut.
-KIOSK_URL="${DASHBOARD_URL}/?theme=ensia"
+# Le thème suit l'heure (clair 7 h-20 h, sombre la nuit) : plus de paramètre.
+# KIOSK_LITE=1 force durablement le mode sans flou (Pi qui rame) ; KIOSK_LITE=0
+# annule ce forçage. Vide = détection automatique à chaque chargement.
+case "${KIOSK_LITE:-}" in
+    1) KIOSK_URL="${DASHBOARD_URL}/?lite=1" ;;
+    0) KIOSK_URL="${DASHBOARD_URL}/?lite=0" ;;
+    *) KIOSK_URL="${DASHBOARD_URL}/" ;;
+esac
 MAX_WAIT_SECONDS=60
 CHROME_RESTART_DELAY=3
 PROFILE_DIR="${HOME}/.config/pi-tracker-kiosk"
@@ -71,17 +75,33 @@ while true; do
                 s/"exit_type":"[^"]*"/"exit_type":"Normal"/' "$PREFS" 2>/dev/null || true
     fi
 
+    # Cache HTTP vidé à chaque (re)lancement : un frontend mis à jour par
+    # update.sh est toujours servi frais, jamais une vieille copie en cache.
+    rm -rf "$PROFILE_DIR/Default/Cache" "$PROFILE_DIR/Default/Code Cache" 2>/dev/null || true
+
     log "Démarrage de Chromium…"
+    # Drapeaux GPU : rastérisation et compositing sur le VideoCore du Pi 4
+    # (blur, transitions transform/opacity à 60 fps). Process limités pour
+    # tenir dans 2 Go. CHROMIUM_EXTRA_FLAGS permet d'en ajouter sans éditer.
+    # shellcheck disable=SC2086
     "$CHROMIUM_BIN" \
         --kiosk \
         --user-data-dir="$PROFILE_DIR" \
         --noerrdialogs \
         --disable-infobars \
         --disable-session-crashed-bubble \
-        --disable-features=Translate \
+        --disable-features=Translate,TouchpadOverscrollHistoryNavigation \
         --disable-pinch \
         --overscroll-history-navigation=0 \
         --check-for-update-interval=31536000 \
+        --ignore-gpu-blocklist \
+        --enable-gpu-rasterization \
+        --enable-zero-copy \
+        --force-device-scale-factor=1 \
+        --touch-events=enabled \
+        --renderer-process-limit=2 \
+        --disk-cache-size=33554432 \
+        ${CHROMIUM_EXTRA_FLAGS:-} \
         "$KIOSK_URL" || true
 
     log "Chromium s'est arrêté — redémarrage dans ${CHROME_RESTART_DELAY}s."

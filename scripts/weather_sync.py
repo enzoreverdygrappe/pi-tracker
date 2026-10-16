@@ -1,7 +1,7 @@
 """Sync météo via Open-Meteo (gratuit, sans clé API) -> data/weather.json.
 
 Localisation dans .env : WEATHER_LAT / WEATHER_LON / WEATHER_CITY
-(défaut : Lyon). Chaque collecte ajoute un snapshot ; le dashboard lit
+(défaut : Paris). Chaque collecte ajoute un snapshot ; le dashboard lit
 le dernier (actuel + 24 h par tranches de 3 h + 3 jours).
 
 Usage :
@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -23,13 +24,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import DATA_DIR, load_env
 from scripts.common import append_entry, read_document, utc_now_iso, write_document_atomic
+from scripts.source_status import record_status
 
 CATEGORY = "weather"
 DATA_FILE = DATA_DIR / f"{CATEGORY}.json"
 
 API_URL = "https://api.open-meteo.com/v1/forecast"
 REQUEST_TIMEOUT_SECONDS = 15
-DEFAULT_LOCATION = {"lat": "45.7578", "lon": "4.8320", "city": "Lyon"}
+RETRY_DELAYS_SECONDS = (5, 20)   # Open-Meteo renvoie parfois 503 / délai dépassé : 3 essais
+TRANSIENT_HTTP_CODES = {408, 429}  # délai et limite de débit : passagers, comme les 5xx
+DEFAULT_LOCATION = {"lat": "48.8566", "lon": "2.3522", "city": "Paris"}
 HOURLY_STEP_HOURS = 3
 HOURLY_SLOTS = 8          # 8 x 3 h = 24 h
 FORECAST_DAYS_SHOWN = 3   # à partir de demain
@@ -37,7 +41,7 @@ MAX_SNAPSHOTS = 200
 
 
 def get_location() -> dict[str, str]:
-    """Localisation depuis .env, défauts Lyon (changer de ville = 3 lignes)."""
+    """Localisation depuis .env, défauts Paris (changer de ville = 3 lignes)."""
     env = load_env()
     return {
         "lat": env.get("WEATHER_LAT", DEFAULT_LOCATION["lat"]),
@@ -46,7 +50,8 @@ def get_location() -> dict[str, str]:
     }
 
 
-def fetch_forecast(location: dict[str, str]) -> dict[str, Any]:
+def fetch_forecast(location: dict[str, str], opener=urlopen, sleep=time.sleep) -> dict[str, Any]:
+    """Prévisions Open-Meteo ; les erreurs passagères (5xx, réseau) sont retentées."""
     params = urlencode({
         "latitude": location["lat"],
         "longitude": location["lon"],
@@ -58,13 +63,19 @@ def fetch_forecast(location: dict[str, str]) -> dict[str, Any]:
         "forecast_days": str(FORECAST_DAYS_SHOWN + 2),
     })
     request = Request(f"{API_URL}?{params}", headers={"User-Agent": "pi-tracker/1.0"})
-    try:
-        with urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
-            return json.loads(response.read(1_000_000).decode("utf-8", errors="replace"))
-    except HTTPError as error:
-        raise RuntimeError(f"Erreur API Open-Meteo {error.code}") from error
-    except (URLError, OSError, json.JSONDecodeError) as error:
-        raise RuntimeError(f"Requête Open-Meteo échouée : {error}") from error
+    for delay in (*RETRY_DELAYS_SECONDS, None):
+        try:
+            with opener(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
+                return json.loads(response.read(1_000_000).decode("utf-8", errors="replace"))
+        except HTTPError as error:
+            failure = RuntimeError(f"Erreur API Open-Meteo {error.code}")
+            if error.code < 500 and error.code not in TRANSIENT_HTTP_CODES:
+                raise failure from error
+        except (URLError, OSError, json.JSONDecodeError) as error:
+            failure = RuntimeError(f"Requête Open-Meteo échouée : {error}")
+        if delay is None:
+            raise failure
+        sleep(delay)
 
 
 def _round1(value: Any) -> float | None:
@@ -160,11 +171,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "collect":
             print(format_snapshot(collect()))
+            record_status(CATEGORY)
         elif args.command == "show":
             entries = read_document(DATA_FILE, CATEGORY).get("entries", [])
             print(format_snapshot(entries[-1]) if entries
                   else "Aucun snapshot — lancer 'collect' d'abord.")
     except (RuntimeError, ValueError, OSError) as error:
+        if args.command == "collect":
+            record_status(CATEGORY, str(error))
         print(f"Erreur : {error}", file=sys.stderr)
         return 1
     return 0

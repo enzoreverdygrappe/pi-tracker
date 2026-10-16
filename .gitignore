@@ -2,12 +2,17 @@
 .env
 .whoop_tokens.json
 .google_tokens.json
+.garmin_tokens/
 
 # Données personnelles : jamais poussées (le dépôt GitHub est PUBLIC).
 # Agenda et finances restent locaux au Pi ; les retirer d'ici uniquement
 # si le dépôt passe en privé et que la sauvegarde est voulue.
 data/calendar.json
 data/goal.json
+data/run_plan.json
+# Régénérés à chaque collecte, propres à cette machine :
+data/kotcha_workouts.json
+data/sources_status.json
 
 # Python
 __pycache__/

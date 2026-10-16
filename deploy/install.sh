@@ -43,7 +43,7 @@ sudo systemctl enable --now tracker.service
 ok "tracker.service actif (Restart=always)."
 
 info "6/7 · Autostart kiosque + rotation des logs"
-chmod +x deploy/kiosk.sh deploy/update.sh 2>/dev/null || true
+chmod +x deploy/kiosk.sh deploy/kiosk-restart.sh deploy/update.sh 2>/dev/null || true
 AUTOSTART_DIR="${HOME}/.config/autostart"
 mkdir -p "$AUTOSTART_DIR"
 cat > "${AUTOSTART_DIR}/pi-tracker-kiosk.desktop" <<EOF

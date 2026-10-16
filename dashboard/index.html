@@ -1,52 +1,99 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ENSIA · Tracker</title>
-  <!-- Google Fonts (charte ENSIA v2) : si le kiosque est hors ligne,
-       les fallbacks locaux de style.css prennent le relais. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="css/style.css">
+  <title>Tracker</title>
+  <!-- Tout est local (kiosque hors ligne) : police Inter servie depuis assets/fonts. -->
+  <link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/leaflet/leaflet.css?v=1.9.4">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <img class="brand-mark logo-dark" src="assets/ensia-logo-inverse.svg" alt="ENSIA">
-        <img class="brand-mark logo-light" src="assets/ensia-logo.svg" alt="ENSIA">
-        <span class="brand-sub">Tracker</span>
-      </div>
-      <div class="topbar-right">
-        <button id="theme-toggle" class="theme-toggle" type="button"
-          aria-label="Basculer entre thème nuit et thème papier" aria-pressed="false">
-          <span class="theme-toggle-knob"></span>
-        </button>
-        <div class="clock">
-          <span id="clock-time">--:--</span>
-          <span id="clock-date">--</span>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <main id="pager" class="pager" aria-roledescription="carrousel">
+
+    <!-- Page 1 · Accueil -->
+    <section class="page page-home" data-page="0" aria-label="Accueil">
+      <div class="bento bento-home">
+        <div class="tile tile-clock" style="--i:0">
+          <div class="clock-time" id="clock-time">--:--</div>
+          <div class="clock-date" id="clock-date">--</div>
         </div>
+
+        <article class="tile card card-weather" style="--i:1" id="w-weather"></article>
+        <button type="button" class="tile card card-recovery is-pressable" style="--i:2"
+          id="w-recovery" data-goto="1" aria-label="Ouvrir la page Santé"></button>
+        <article class="tile card card-agenda" style="--i:3" id="w-agenda"></article>
+        <article class="tile card card-claude" style="--i:4" id="w-claude"></article>
       </div>
-    </header>
+    </section>
 
-    <main id="view-container" class="view-container" aria-live="polite"></main>
+    <!-- Page 2 · Santé (WHOOP) -->
+    <section class="page page-health" data-page="1" aria-label="Santé">
+      <header class="page-head">
+        <h1 class="page-title">Santé</h1>
+        <span class="page-meta" id="health-meta"></span>
+      </header>
+      <div class="bento bento-health">
+        <article class="tile card card-recovery-xl" style="--i:0" id="h-recovery"></article>
+        <article class="tile card" style="--i:1" id="h-sleep"></article>
+        <article class="tile card" style="--i:2" id="h-strain"></article>
+        <article class="tile card card-trend" style="--i:3" id="h-trend"></article>
+      </div>
+    </section>
 
-    <nav id="tab-bar" class="tab-bar" aria-label="Navigation des vues"></nav>
+    <!-- Page 3 · Claude API -->
+    <section class="page page-claude" data-page="2" aria-label="Claude API">
+      <header class="page-head">
+        <h1 class="page-title">Claude API</h1>
+        <span class="page-meta" id="claude-meta"></span>
+      </header>
+      <div class="bento bento-claude">
+        <article class="tile card" style="--i:0" id="c-today"></article>
+        <article class="tile card card-chart-xl" style="--i:1" id="c-chart"></article>
+        <article class="tile card" style="--i:2" id="c-limits"></article>
+        <article class="tile card" style="--i:3" id="c-models"></article>
+        <article class="tile card" style="--i:4" id="c-totals"></article>
+      </div>
+    </section>
+
+    <!-- Page 4 · Course (séance Kotcha saisie au tactile) -->
+    <section class="page page-run" data-page="3" aria-label="Course">
+      <header class="page-head">
+        <h1 class="page-title">Course</h1>
+        <span class="page-meta" id="run-meta"></span>
+      </header>
+      <div class="bento bento-run">
+        <article class="tile card" style="--i:0" id="run-session"></article>
+        <article class="tile card card-map" style="--i:1" id="run-map"></article>
+        <article class="tile card" style="--i:2" id="run-notes"></article>
+        <article class="tile card" style="--i:3" id="run-qr"></article>
+      </div>
+    </section>
+  </main>
+
+  <nav class="dots" id="dots" aria-label="Pages">
+    <button type="button" class="dot" data-goto="0" aria-label="Accueil"><span></span></button>
+    <button type="button" class="dot" data-goto="1" aria-label="Santé"><span></span></button>
+    <button type="button" class="dot" data-goto="2" aria-label="Claude API"><span></span></button>
+    <button type="button" class="dot" data-goto="3" aria-label="Course"><span></span></button>
+  </nav>
+
+  <!-- Veille : horloge géante, luminosité réduite, un toucher réveille. -->
+  <div class="standby" id="standby" aria-hidden="true">
+    <div class="standby-inner" id="standby-inner">
+      <div class="standby-time" id="standby-time">--:--</div>
+      <div class="standby-date" id="standby-date"></div>
+    </div>
   </div>
 
-  <div id="chart-tooltip" class="chart-tooltip" hidden></div>
-
-  <script src="js/core.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/weather-icons.js"></script>
-  <script src="js/views/claude.js"></script>
-  <script src="js/views/goal.js"></script>
-  <script src="js/views/whoop.js"></script>
-  <script src="js/views/agenda.js"></script>
-  <script src="js/views/meteo.js"></script>
-  <script src="js/app.js"></script>
+  <script src="assets/leaflet/leaflet.js?v=1.9.4"></script>
+  <script src="js/weather-icons.js?v=4"></script>
+  <script src="js/ui.js?v=5"></script>
+  <script src="js/lite.js?v=1"></script>
+  <script src="js/run.js?v=8"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
